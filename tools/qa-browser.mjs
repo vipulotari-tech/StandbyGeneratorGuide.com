@@ -44,11 +44,22 @@ try {
     const response = await page.goto(`${baseUrl}${path}`, { waitUntil: 'networkidle' });
     assert(response && response.ok(), `page failed to load: ${path}`);
     await page.locator('#main h1').waitFor({ state: 'attached' });
-    assert.equal(
-      await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
-      false,
-      `horizontal overflow at ${path} (${width}px)`,
-    );
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      viewport: innerWidth,
+      culprits: [...document.querySelectorAll('body *')]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          const cs = getComputedStyle(el);
+          return cs.display !== 'none' && r.width > 1 && r.right > innerWidth + 2;
+        })
+        .slice(0, 12)
+        .map((el) => ({ tag: el.tagName, classes: String(el.className).slice(0, 120),
+          width: Math.round(el.getBoundingClientRect().width),
+          right: Math.round(el.getBoundingClientRect().right) })),
+    }));
+    assert.equal(overflow.scrollWidth > overflow.viewport, false,
+      `horizontal overflow at ${path} (${width}px): ${JSON.stringify(overflow)}`);
     assert.equal(await page.locator('#main h1').count(), 1, `expected one content H1 at ${path}`);
   }
 
@@ -257,6 +268,70 @@ try {
       `luxury homeowner sections introduce sideways scroll at ${width}px`);
   }
 
+  // Mobile data-table regression: each semantic row must actually contain all of its
+  // cells. A prior table/block formatting-context mismatch clipped five-field log
+  // entries and exact-model comparisons to a fraction of their content on Android.
+  const inspectMobileTableClipping = async (route, width) => {
+    const problems = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('#main table.mobile-card-table, #main table.mobile-kv-table'))
+        .flatMap((table, tableIndex) => {
+          const tableBox = table.getBoundingClientRect();
+          const tableStyle = getComputedStyle(table);
+          const rows = Array.from(table.querySelectorAll('tbody tr'))
+            .filter((row) => getComputedStyle(row).display !== 'none');
+          const failures = [];
+          if (tableStyle.display !== 'block') {
+            failures.push({ tableIndex, issue: 'table still uses native table layout on mobile', display: tableStyle.display });
+          }
+          for (const [rowIndex, row] of rows.entries()) {
+            const rowBox = row.getBoundingClientRect();
+            const rowStyle = getComputedStyle(row);
+            const cells = Array.from(row.children).filter((cell) => getComputedStyle(cell).display !== 'none');
+            const overflowed = cells.some((cell) => {
+              const box = cell.getBoundingClientRect();
+              return box.top < rowBox.top - 2 || box.bottom > rowBox.bottom + 2 ||
+                box.left < rowBox.left - 2 || box.right > rowBox.right + 2 ||
+                cell.scrollHeight > cell.clientHeight + 2;
+            });
+            if (rowStyle.overflowY === 'hidden' || overflowed || rowBox.height < 30 ||
+                rowBox.right > tableBox.right + 2 || rowBox.left < tableBox.left - 2) {
+              failures.push({ tableIndex, rowIndex, issue: 'row clipped or outside its card',
+                rowHeight: rowBox.height, overflow: rowStyle.overflowY,
+                cellHeights: cells.map((cell) => Math.round(cell.getBoundingClientRect().height)) });
+            }
+          }
+          return failures;
+        });
+    });
+    assert.deepEqual(problems, [], `mobile table content is clipped at ${route} (${width}px)`);
+  };
+
+  for (const route of [
+    '/maintenance/generator-maintenance-checklist/',
+    '/maintenance/maintenance-log/',
+    '/maintenance/model-service-schedules/',
+    '/comparisons/generac-vs-champion/',
+    '/comparisons/five-brand-standby-generator-comparison/',
+    '/research/evidence-ledger/',
+  ]) {
+    for (const width of [320, 390, 430, 479, 639]) {
+      await page.setViewportSize({ width, height: 900 });
+      const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
+      assert(response?.ok(), `mobile table route failed: ${route}`);
+      await inspectMobileTableClipping(route, width);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+        `mobile table causes horizontal overflow at ${route} (${width}px)`);
+    }
+  }
+  // Print/PDF must retain native table layout and all 12 service-log rows.
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`${baseUrl}/maintenance/maintenance-log/`, { waitUntil: 'networkidle' });
+  await page.emulateMedia({ media: 'print' });
+  assert.equal(await page.locator('.maintenance-log tbody tr:visible').count(), 12, 'service-log print lost record rows');
+  assert.equal(await page.locator('.maintenance-log table').evaluate((el) => getComputedStyle(el).display), 'table',
+    'service-log print must be a semantic table, not mobile cards');
+  await page.emulateMedia({ media: 'screen' });
+
   // Full generated-route crawl: every static index page gets a mobile load,
   // one-H1, and horizontal-overflow check. This catches new content routes,
   // not just the hand-picked smoke cases above.
@@ -278,6 +353,7 @@ try {
       false,
       `horizontal overflow at generated route ${path}`,
     );
+    await inspectMobileTableClipping(path, 390);
     const scrollingContainers = await page.evaluate(() =>
       Array.from(document.querySelectorAll('#main .overflow-x-auto'))
         .filter((element) => {

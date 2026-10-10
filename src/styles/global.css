@@ -104,15 +104,28 @@ header :focus-visible {
    unchanged for filled controls; this override is for text utility usage only. */
 .text-accent-dark { color: #B95400; }
 
-/* Mobile-friendly data tables.
-   Desktop keeps semantic tables; narrow screens render each row as a labeled card.
-   Labels are populated from the table header by BaseLayout. */
-@media (max-width: 639px) {
+/* Responsive semantic tables: preserve the entire row content as readable cards on small screens.
+   Avoid table formatting contexts around block rows: they can calculate a shorter row
+   box than its cells, which gets clipped by overflow:hidden (observed on Android).
+   Screen-only rules deliberately leave print/PDF tables in their native layout. */
+@media screen and (max-width: 639px) {
   .mobile-card-table {
+    display: block !important;
     min-width: 0 !important;
     width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    table-layout: auto !important;
+    overflow: visible !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
+  }
+  /* Do not override Tailwind's sr-only 1px clipping box: a full-width
+     absolutely positioned caption can cause horizontal overflow at 320px. */
+  .mobile-card-table caption:not(.sr-only) {
+    display: block;
+    width: 100%;
+    text-align: left;
   }
   .mobile-card-table thead {
     position: absolute !important;
@@ -122,17 +135,23 @@ header :focus-visible {
     margin: -1px !important;
     overflow: hidden !important;
     clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    left: -10000px !important;
+    top: auto !important;
     white-space: nowrap !important;
     border: 0 !important;
   }
   .mobile-card-table tbody {
-    display: block;
+    display: block !important;
     width: 100%;
+    height: auto !important;
   }
   .mobile-card-table tbody tr {
-    display: block;
+    display: block !important;
     width: 100%;
-    overflow: hidden;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     background: #fff;
@@ -142,7 +161,10 @@ header :focus-visible {
   }
   .mobile-card-table tbody > tr > th,
   .mobile-card-table tbody > tr > td {
-    display: grid;
+    display: grid !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     grid-template-columns: minmax(7rem, 0.9fr) minmax(0, 1.1fr);
     gap: 0.75rem;
     align-items: start;
@@ -177,19 +199,26 @@ header :focus-visible {
   }
 
   .mobile-kv-table {
+    display: block !important;
     min-width: 0 !important;
     width: 100% !important;
+    height: auto !important;
+    table-layout: auto !important;
+    overflow: visible !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
   }
   .mobile-kv-table tbody {
-    display: block;
+    display: block !important;
     width: 100%;
+    height: auto !important;
   }
   .mobile-kv-table tbody tr {
-    display: block;
+    display: block !important;
     width: 100%;
-    overflow: hidden;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     background: #fff;
@@ -198,7 +227,9 @@ header :focus-visible {
     margin-top: 0.75rem;
   }
   .mobile-kv-table tbody th[scope="row"] {
-    display: block;
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
     width: 100% !important;
     padding: 0.7rem 1rem !important;
     border: 0 !important;
@@ -206,13 +237,25 @@ header :focus-visible {
     color: var(--color-primary) !important;
   }
   .mobile-kv-table tbody td {
-    display: block;
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
     width: 100% !important;
     min-width: 0 !important;
     padding: 0.8rem 1rem !important;
     border: 0 !important;
     background: #fff !important;
     overflow-wrap: anywhere;
+  }
+}
+
+/* At phone widths, give long evidence notes their full line rather than a
+   cramped 50/50 grid. This also keeps empty service-log fields usable. */
+@media screen and (max-width: 479px) {
+  .mobile-card-table tbody > tr > th,
+  .mobile-card-table tbody > tr > td {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.3rem;
   }
 }
 
@@ -271,8 +314,6 @@ h1,h2,h3,legend{overflow-wrap:anywhere} main{min-width:0} .prose-hgg a{overflow-
 
 .button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.8rem 1.2rem;background:#203b34;color:white;border:1px solid #203b34;font-weight:650;font-size:.95rem;text-decoration:none}.button.secondary{background:transparent;color:#203b34}.button:hover{background:#34594c;color:white}.publication-hero .editorial-container{padding-top:0;padding-bottom:0}
 
-@media(max-width:639px){.mobile-card-table thead{overflow:hidden;clip-path:inset(50%);max-width:1px}}
-@media(max-width:639px){.mobile-card-table thead{left:-10000px;top:auto}}
 @media print{.results-table th,.results-table td{color:#000!important}.planner-heading h1{font-size:25pt}.planner-heading .lede{font-size:11pt}.planner-heading .help,.planner-page .help{font-size:9pt}.planner-page .planning-notice{font-size:9pt}.planner-page .review-panel{display:none!important}nav[aria-label="Breadcrumb"]{display:none!important}}
 @page{size:letter;margin:.5in}
 @media print{.planner-form:has(.planner-results h2)>:not(.planner-results){display:none!important}.planner-form{margin:0}.input-record{border:0;padding:0;break-inside:auto}.input-record .results-table th:first-child{width:38%}.results-table{break-inside:auto}}
