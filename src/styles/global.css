@@ -120,7 +120,9 @@ header :focus-visible {
     border-collapse: separate !important;
     border-spacing: 0 !important;
   }
-  .mobile-card-table caption {
+  /* Do not override Tailwind's sr-only 1px clipping box: a full-width
+     absolutely positioned caption can cause horizontal overflow at 320px. */
+  .mobile-card-table caption:not(.sr-only) {
     display: block;
     width: 100%;
     text-align: left;
