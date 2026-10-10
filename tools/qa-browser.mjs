@@ -44,11 +44,22 @@ try {
     const response = await page.goto(`${baseUrl}${path}`, { waitUntil: 'networkidle' });
     assert(response && response.ok(), `page failed to load: ${path}`);
     await page.locator('#main h1').waitFor({ state: 'attached' });
-    assert.equal(
-      await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
-      false,
-      `horizontal overflow at ${path} (${width}px)`,
-    );
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      viewport: innerWidth,
+      culprits: [...document.querySelectorAll('body *')]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          const cs = getComputedStyle(el);
+          return cs.display !== 'none' && r.width > 1 && r.right > innerWidth + 2;
+        })
+        .slice(0, 12)
+        .map((el) => ({ tag: el.tagName, classes: String(el.className).slice(0, 120),
+          width: Math.round(el.getBoundingClientRect().width),
+          right: Math.round(el.getBoundingClientRect().right) })),
+    }));
+    assert.equal(overflow.scrollWidth > overflow.viewport, false,
+      `horizontal overflow at ${path} (${width}px): ${JSON.stringify(overflow)}`);
     assert.equal(await page.locator('#main h1').count(), 1, `expected one content H1 at ${path}`);
   }
 
