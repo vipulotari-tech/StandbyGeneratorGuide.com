@@ -30,7 +30,34 @@ const active = (href: string) => path === href || path.startsWith(href);
   </nav>
 </header>
 <script>
-  const btn=document.getElementById('menu-btn'); const nav=document.getElementById('mobile-nav'); const label=document.getElementById('menu-label');
-  btn?.addEventListener('click',()=>{const open=nav?.classList.toggle('hidden')===false;btn.setAttribute('aria-expanded',String(open));if(label)label.textContent=open?'Close navigation menu':'Open navigation menu';if(open)(nav?.querySelector('a') as HTMLElement|null)?.focus();});
-  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!nav?.classList.contains('hidden')){nav?.classList.add('hidden');btn?.setAttribute('aria-expanded','false');if(label)label.textContent='Open navigation menu';(btn as HTMLElement|null)?.focus();}});
+  const btn = document.getElementById('menu-btn');
+  const nav = document.getElementById('mobile-nav');
+  const label = document.getElementById('menu-label');
+
+  const closeMenu = (restoreFocus = false) => {
+    if (!nav || nav.classList.contains('hidden')) return;
+    nav.classList.add('hidden');
+    btn?.setAttribute('aria-expanded', 'false');
+    if (label) label.textContent = 'Open navigation menu';
+    if (restoreFocus) (btn as HTMLElement | null)?.focus();
+  };
+  btn?.addEventListener('click', () => {
+    const open = nav?.classList.toggle('hidden') === false;
+    btn.setAttribute('aria-expanded', String(open));
+    if (label) label.textContent = open ? 'Close navigation menu' : 'Open navigation menu';
+    if (open) (nav?.querySelector('a') as HTMLElement | null)?.focus();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMenu(true);
+  });
+  // Tapping the article outside the open mobile menu should dismiss it.
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (!(target instanceof Node) || !nav || !btn) return;
+    if (!nav.contains(target) && !btn.contains(target)) closeMenu();
+  });
+  // Prevent a stale expanded state after rotating or resizing to desktop.
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) closeMenu();
+  });
 </script>
