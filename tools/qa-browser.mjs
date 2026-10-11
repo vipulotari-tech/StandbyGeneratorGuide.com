@@ -459,7 +459,6 @@ try {
         `maintenance mobile field clipping at ${width}px: ${JSON.stringify(measurements)}`);
     }
   }
-  }
   // Regression for actual PDF data loss: values entered in mobile cards and
   // generator identity fields must appear in the printable 12-row table.
   await page.setViewportSize({ width: 390, height: 900 });
@@ -494,10 +493,8 @@ try {
   assert.equal(await page.locator('.log-table tbody tr:visible').count(), 12,
     'print should keep all 12 entries');
   await page.emulateMedia({ media: 'screen' });
-  const dialogPromise = page.waitForEvent('dialog');
+  page.once('dialog', (dialog) => dialog.accept());
   await page.locator('#clear-log').click();
-  const dialog = await dialogPromise;
-  await dialog.accept();
   assert.equal(await page.locator('#log-detail-0').inputValue(), '',
     'clear entries must remove the entered generator model');
   assert.equal(await page.locator('.log-table [data-print-key="service-0-2"]').textContent(),
