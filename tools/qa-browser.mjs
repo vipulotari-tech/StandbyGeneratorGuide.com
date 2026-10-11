@@ -463,6 +463,57 @@ try {
     'print must display 12-entry table');
   await page.emulateMedia({ media: 'screen' });
 
+
+  // Site-reported mobile regression: the 16-line quote checklist must display
+  // meaningful numbered cards, not repeated "# / Line Item / What Should Be Stated"
+  // table labels, and preserve a complete desktop/print table.
+  for (const width of [320, 360, 390, 430, 640, 720, 768, 980, 1024, 1199, 1200, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const response = await page.goto(`${baseUrl}/cost/standby-generator-quote-checklist/`, { waitUntil: 'networkidle' });
+    assert(response?.ok(), `16-line checklist route failed at ${width}px`);
+    const checklistCards = page.locator('#checklist .quote-checklist-cards');
+    const checklistTable = page.locator('#checklist .quote-checklist-table-wrap');
+    const showCards = width < 1200;
+    assert.equal(await checklistCards.isVisible(), showCards, `checklist cards visibility at ${width}px`);
+    assert.equal(await checklistTable.isVisible(), !showCards, `checklist desktop table visibility at ${width}px`);
+    assert.equal(await checklistCards.locator('.quote-checklist-card').count(), 16,
+      `16 checklist cards retained at ${width}px`);
+    assert.equal(await checklistTable.locator('tbody tr').count(), 16,
+      `16 checklist desktop table rows retained at ${width}px`);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+      `checklist causes horizontal overflow at ${width}px`);
+    if (showCards) {
+      const cardGeometry = await checklistCards.locator('.quote-checklist-card').evaluateAll((nodes) => nodes.map(node => {
+        const outer = node.getBoundingClientRect();
+        const heading = node.querySelector('h3')?.getBoundingClientRect();
+        const description = node.querySelector('p')?.getBoundingClientRect();
+        const number = node.querySelector('.quote-checklist-number')?.textContent?.trim();
+        return {
+          number,
+          heading: Boolean(heading),
+          description: Boolean(description),
+          fits: Boolean(heading && description &&
+            heading.top >= outer.top - 2 && heading.bottom <= outer.bottom + 2 &&
+            description.top >= heading.bottom - 2 && description.bottom <= outer.bottom + 2 &&
+            description.left >= outer.left - 2 && description.right <= outer.right + 2),
+        };
+      }));
+      assert(cardGeometry.every((card, i) => card.heading && card.description && card.fits &&
+        card.number === String(i + 1).padStart(2, '0')),
+      `mobile checklist item content clipped at ${width}px: ${JSON.stringify(cardGeometry)}`);
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`${baseUrl}/cost/standby-generator-quote-checklist/`, { waitUntil: 'networkidle' });
+  await page.emulateMedia({ media: 'print' });
+  assert.equal(await page.locator('#checklist .quote-checklist-cards').isVisible(), false,
+    'checklist print must not duplicate mobile cards');
+  assert.equal(await page.locator('#checklist .quote-checklist-table-wrap').isVisible(), true,
+    'checklist print must show a semantic table');
+  assert.equal(await page.locator('#checklist .quote-checklist-table tbody tr:visible').count(), 16,
+    'checklist print must contain all 16 items');
+  await page.emulateMedia({ media: 'screen' });
+
   // Regression: the 12-field proposal sheet must not expand into twelve long
   // generic "Comparison field / Proposal A / Proposal B" cards on Android.
   // Test normal phones, tablet, desktop-mode mobile and desktop, then PDF.
