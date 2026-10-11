@@ -51,7 +51,19 @@ assert.match(robots, /Allow:\s*\//i, 'Production robots.txt must allow crawling'
 assert(!/Disallow:\s*\//i.test(robots), 'Production robots.txt must not block the site root');
 assert(robots.includes(`Sitemap: ${productionOrigin}/sitemap-index.xml`), 'Production robots.txt must advertise the canonical sitemap');
 assert(!robots.includes(stagingOrigin), 'Production robots.txt must not reference staging');
-assert(!/X-Robots-Tag:\s*noindex/i.test(headers), 'Production headers must not contain a global noindex');
+// Host-scoped Pages noindex rules are required; the canonical host remains indexable.
+const noindexScopes = [];
+let currentScope = '';
+for (const line of headers.split(/\r?\n/)) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) continue;
+  if (!/^\s/.test(line)) currentScope = trimmed;
+  else if (/^X-Robots-Tag:\s*noindex\b/i.test(trimmed)) noindexScopes.push(currentScope);
+}
+assert.deepEqual(noindexScopes.sort(), [
+  'https://standbygeneratorguide.pages.dev/*',
+  'https://:version.standbygeneratorguide.pages.dev/*',
+].sort(), 'Only production and preview Pages aliases must receive X-Robots-Tag noindex; never the canonical domain');
 assert(sitemapFiles.length > 0, 'Production must publish sitemap files');
 
 // Check every published text file, including error documents and JS bundles.
