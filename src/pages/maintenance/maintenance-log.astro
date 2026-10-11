@@ -1,6 +1,359 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const generatorDetails = [
+  'Generator model / serial',
+  'ATS model',
+  'Fuel',
+  'Manual / revision',
+  'Service provider / contact',
+  'Exercise schedule from manual',
+  'Next inspection',
+];
+const serviceFields = [
+  'Date',
+  'Run hours',
+  'Work, parts / oil used, alarms',
+  'Performed by',
+  'Next due (date / hours)',
+];
 ---
-<BaseLayout title="Printable Generator Maintenance Log" description="Print a blank generator service log for model, serial number, manual revision, operating hours, service work and next due dates."><article class="editorial-container publication-section maintenance-log"><h1>Generator maintenance log</h1><p>Use the exact unit’s manual and qualified service provider. This record does not replace required service.</p><button type="button" id="print-log" class="button no-print">Print / Save as PDF</button><dl class="log-identity">{['Generator model / serial','ATS model','Fuel','Manual / revision','Service provider / contact','Exercise schedule from manual','Next inspection'].map(label=><div><dt>{label}</dt><dd></dd></div>)}</dl><div class="not-prose mt-4 overflow-x-auto rounded-xl border border-[#d9e0ea]"><table class="mobile-card-table"><caption>Record completed work and the next time / hour interval, whichever applies first.</caption><thead><tr><th scope="col">Date</th><th scope="col">Run hours</th><th scope="col">Work, parts / oil used, alarms</th><th scope="col">Performed by</th><th scope="col">Next due (date / hours)</th></tr></thead><tbody>{Array.from({length:12},()=> <tr><td></td><td></td><td></td><td></td><td></td></tr>)}</tbody></table></div><p class="no-print preview-note">Preview shows 4 of 12 entry rows. Print / Save as PDF includes the full log.</p><p>Retain invoices and warranty-related service evidence. <a href="/maintenance/model-service-schedules/">Selected manual-based schedules</a>.</p></article></BaseLayout>
-<script>document.querySelector('#print-log')?.addEventListener('click',()=>window.print());</script>
-<style>.log-identity{margin:2rem 0}.log-identity div{margin:0 0 1.25rem}.log-identity dt{font-weight:600}.log-identity dd{margin:0;min-height:2rem;border-bottom:1px solid #333}.maintenance-log table{width:100%;border-collapse:collapse;font-size:.8rem;table-layout:fixed}.maintenance-log caption{text-align:left;padding:.5rem 0}.maintenance-log thead th{background:var(--color-primary);color:#fff}.maintenance-log th,.maintenance-log td{border:1px solid #777;padding:.5rem;overflow-wrap:break-word;text-align:left}.maintenance-log td{height:2.75rem;vertical-align:top}.maintenance-log tbody tr:nth-child(n+5){display:none}.preview-note{font-size:.85rem;color:#52616c}.maintenance-log th:nth-child(1){width:11%}.maintenance-log th:nth-child(2){width:11%}.maintenance-log th:nth-child(3){width:40%}.maintenance-log th:nth-child(4){width:16%}.maintenance-log th:nth-child(5){width:22%}@media print{.maintenance-log{width:100%;padding:0}.maintenance-log td{height:2.5rem}.maintenance-log tbody tr:nth-child(n+5){display:table-row}.log-identity dd{min-height:1.6rem}h1{font-size:24px}}</style>
+<BaseLayout
+  title="Printable Generator Maintenance Log"
+  description="Print a blank generator service log for model, serial number, manual revision, operating hours, service work and next due dates."
+>
+  <article class="editorial-container publication-section maintenance-log">
+    <header class="log-header">
+      <p class="log-eyebrow">Standby Generator Guide / Homeowner worksheet</p>
+      <h1>Generator maintenance log</h1>
+      <p class="log-lede">Keep a clear record of your generator details, service visits and running hours. This is a blank worksheet—not proof that any maintenance was performed.</p>
+      <div class="log-actions no-print">
+        <button type="button" id="print-log" class="button log-print-button">Print / Save as PDF <span aria-hidden="true">↗</span></button>
+        <a href="/maintenance/model-service-schedules/" class="log-secondary-link">See model-specific schedules <span aria-hidden="true">→</span></a>
+      </div>
+      <p class="log-safety">Follow the exact generator manual. Arrange qualified service for tasks outside the manufacturer's owner instructions.</p>
+    </header>
+
+    <section class="log-section" aria-labelledby="log-generator-title">
+      <div class="log-section-heading">
+        <span class="log-step" aria-hidden="true">01</span>
+        <div>
+          <h2 id="log-generator-title">Generator details</h2>
+          <p>Complete once and update whenever details change.</p>
+        </div>
+      </div>
+      <dl class="log-identity">
+        {generatorDetails.map((label) => (
+          <div class="identity-field">
+            <dt>{label}</dt>
+            <dd><span class="sr-only">Blank space to complete on paper</span></dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+
+    <section class="log-section" aria-labelledby="log-record-title">
+      <div class="log-section-heading">
+        <span class="log-step" aria-hidden="true">02</span>
+        <div>
+          <h2 id="log-record-title">Service &amp; inspection entries</h2>
+          <p>Record actual observations or completed work and the next due date or hour reading according to the manual.</p>
+        </div>
+      </div>
+
+      <div class="log-table-wrap" role="region" tabindex="0" aria-label="Maintenance log table; scroll horizontally if necessary">
+        <table class="log-table">
+          <caption class="sr-only">Blank service log with 12 entries for printing</caption>
+          <thead>
+            <tr>{serviceFields.map((label) => <th scope="col">{label}</th>)}</tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 12 }, () => <tr>{serviceFields.map(() => <td><span class="sr-only">Blank writing space</span></td>)}</tr>)}
+          </tbody>
+        </table>
+      </div>
+
+      <ol class="log-card-list" aria-label="Blank service and inspection entries">
+        {Array.from({ length: 4 }, (_, index) => (
+          <li class="log-card">
+            <h3>Entry {String(index + 1).padStart(2, '0')}</h3>
+            <dl>
+              {serviceFields.map((label) => (
+                <div class="log-card-field">
+                  <dt>{label}</dt>
+                  <dd><span class="sr-only">Blank space to complete on paper</span></dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))}
+      </ol>
+      <p class="log-preview-note no-print">Screen preview: 4 entries. <strong>Print / Save as PDF</strong> includes all 12 blank service rows.</p>
+    </section>
+
+    <p class="log-footer-note">Keep service invoices and warranty documentation together with this log. For maintenance intervals, consult the exact model and serial-number manual. <a href="/maintenance/model-service-schedules/" class="no-print">Review sourced model schedules</a>.</p>
+  </article>
+</BaseLayout>
+
+<script>
+  document.querySelector('#print-log')?.addEventListener('click', () => window.print());
+</script>
+
+<style>
+  .maintenance-log {
+    max-width: 1152px;
+    color: #263b33;
+  }
+  .log-header {
+    padding: clamp(1.2rem, 3.5vw, 2.5rem);
+    border: 1px solid #d9e1d9;
+    border-radius: 1rem;
+    background: linear-gradient(130deg, #f5f8f4, #ffffff 72%);
+  }
+  .log-eyebrow {
+    margin: 0 0 0.65rem;
+    color: #547163;
+    font-size: 0.73rem;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+  .maintenance-log h1 {
+    margin: 0;
+    max-width: 18ch;
+    color: #203b34;
+    font: 500 clamp(2.15rem, 4.6vw, 3.6rem)/1.12 Georgia, 'Times New Roman', serif;
+    letter-spacing: -0.025em;
+  }
+  .log-lede {
+    max-width: 68ch;
+    margin: 1rem 0 0;
+    color: #40554c;
+    font-size: clamp(1rem, 1.5vw, 1.12rem);
+    line-height: 1.65;
+  }
+  .log-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.7rem 1rem;
+    margin-top: 1.5rem;
+  }
+  .log-print-button {
+    gap: 1rem;
+    border-radius: 0.45rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .log-secondary-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    gap: 0.45rem;
+    padding: 0.65rem 0.2rem;
+    color: #265344;
+    font-size: 0.92rem;
+    font-weight: 650;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .log-safety {
+    max-width: 68ch;
+    margin: 1.2rem 0 0;
+    padding-left: 0.9rem;
+    border-left: 3px solid #d2a45d;
+    color: #506055;
+    font-size: 0.91rem;
+    line-height: 1.6;
+  }
+  .log-section {
+    min-width: 0;
+    margin-top: 2rem;
+  }
+  .log-section-heading {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    margin-bottom: 1.1rem;
+  }
+  .log-step {
+    display: grid;
+    flex: 0 0 2.3rem;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 50%;
+    background: #203b34;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 750;
+  }
+  .maintenance-log .log-section-heading h2 {
+    margin: 0;
+    color: #203b34;
+    font: 500 clamp(1.6rem, 3vw, 2rem)/1.2 Georgia, 'Times New Roman', serif;
+  }
+  .log-section-heading p {
+    margin: 0.35rem 0 0;
+    color: #53675d;
+    font-size: 0.93rem;
+    line-height: 1.6;
+  }
+  .log-identity {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+    margin: 0;
+  }
+  .identity-field {
+    min-width: 0;
+    padding: 0.85rem 1rem 0.6rem;
+    border: 1px solid #dde5de;
+    border-radius: 0.6rem;
+    background: #fafbf9;
+  }
+  .identity-field dt {
+    color: #345246;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .identity-field dd {
+    position: relative;
+    min-height: 1.6rem;
+    margin: 0.35rem 0 0;
+    border-bottom: 1px solid #b3c0b7;
+  }
+  .log-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #dbe4dd;
+    border-radius: 0.75rem;
+  }
+  .log-table {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.88rem;
+  }
+  .log-table th {
+    padding: 0.9rem 0.75rem;
+    border: 1px solid #33584b;
+    background: #203b34;
+    color: #fff;
+    font-weight: 700;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+  .log-table td {
+    height: 3.4rem;
+    padding: 0.6rem;
+    border: 1px solid #dce4dc;
+    background: #fff;
+    vertical-align: top;
+  }
+  .log-table tbody tr:nth-child(even) td { background: #f8faf8; }
+  .log-table tbody tr:nth-child(n+5) { display: none; }
+  .log-table th:nth-child(1) { width: 12%; }
+  .log-table th:nth-child(2) { width: 12%; }
+  .log-table th:nth-child(3) { width: 34%; }
+  .log-table th:nth-child(4) { width: 18%; }
+  .log-table th:nth-child(5) { width: 24%; }
+  .log-card-list { display: none; }
+  .log-preview-note {
+    margin: 0.8rem 0 0;
+    color: #4b6256;
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+  .log-footer-note {
+    margin: 2rem 0 0;
+    padding: 1rem 1.15rem;
+    border-left: 3px solid #d2a45d;
+    background: #f8f8f3;
+    color: #46594f;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+  .log-footer-note a { color: #265344; text-decoration: underline; }
+  @media screen and (max-width: 1199px) {
+    .log-table-wrap { display: none !important; }
+    .log-card-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    .log-card {
+      min-width: 0;
+      padding: 1rem 1.15rem;
+      border: 1px solid #d9e2da;
+      border-radius: 0.9rem;
+      background: #fff;
+      box-shadow: 0 4px 18px rgba(19, 43, 31, 0.035);
+    }
+    .log-card h3 {
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 2px solid #254d3d;
+      color: #234234;
+      font-size: 1.05rem;
+      line-height: 1.4;
+      font-weight: 750;
+    }
+    .log-card dl { margin: 0; }
+    .log-card-field { padding: 0.55rem 0 0.45rem; }
+    .log-card-field + .log-card-field { border-top: 1px solid #edf0ec; }
+    .log-card-field dt {
+      color: #345547;
+      font-size: 0.81rem;
+      line-height: 1.4;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+    .log-card-field dd {
+      min-height: 1.75rem;
+      margin: 0.3rem 0 0;
+      border-bottom: 1px solid #aebdb2;
+    }
+  }
+  @media screen and (max-width: 719px) {
+    .log-identity, .log-card-list { grid-template-columns: minmax(0, 1fr); }
+    .log-header { padding: 1.25rem; }
+    .maintenance-log h1 { font-size: clamp(2rem, 8.5vw, 2.65rem); }
+    .log-section { margin-top: 1.6rem; }
+  }
+  @media print {
+    .maintenance-log {
+      max-width: none;
+      width: 100%;
+      padding: 0 !important;
+      color: #000;
+    }
+    .log-header { padding: 0 0 0.4rem; border: 0; border-radius: 0; background: #fff; }
+    .log-eyebrow { color: #444; font-size: 8pt; }
+    .maintenance-log h1 { color: #000; font-size: 22pt; }
+    .log-lede, .log-safety, .log-section-heading p, .log-preview-note, .log-actions, .log-footer-note a { display: none !important; }
+    .log-section { margin-top: 0.55rem; }
+    .log-section-heading { margin-bottom: 0.45rem; }
+    .maintenance-log .log-section-heading h2 { font-size: 13pt; color: #000; }
+    .log-step { width: 1.5rem; height: 1.5rem; flex-basis: 1.5rem; font-size: 8pt; }
+    .log-identity { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem 0.6rem; }
+    .identity-field { padding: 0.3rem 0.55rem; border-radius: 0; background: #fff; }
+    .identity-field dt { font-size: 8pt; color: #000; }
+    .identity-field dd { min-height: 0.95rem; margin-top: 0.15rem; border-color: #555; }
+    .log-card-list { display: none !important; }
+    .log-table-wrap { display: block !important; overflow: visible !important; border-radius: 0; border: 0; }
+    .log-table { display: table; min-width: 0; font-size: 8pt; }
+    .log-table thead { display: table-header-group; }
+    .log-table tr { display: table-row; break-inside: avoid; }
+    .log-table th { background: #eee !important; color: #000 !important; border: 1px solid #555; padding: 0.45rem; }
+    .log-table td { height: 2.4rem; background: #fff !important; border: 1px solid #888; }
+    .log-table tbody tr:nth-child(n+5) { display: table-row; }
+    .log-footer-note { margin-top: 0.45rem; padding: 0.3rem 0; border: 0; background: #fff; font-size: 8pt; }
+  }
+</style>
