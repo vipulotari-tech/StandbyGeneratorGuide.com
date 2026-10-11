@@ -11,6 +11,73 @@ const toc = [
   { id: 'faq', label: 'Quote questions' },
 ];
 
+const quoteChecklistItems = [
+  {
+    "name": "Generator",
+    "description": "Exact manufacturer, model, voltage/phase, fuel, and fuel-specific standby rating."
+  },
+  {
+    "name": "Transfer equipment",
+    "description": "Exact ATS / switch model, amperage, service-entrance rating where applicable, and whether it is included in the quoted package."
+  },
+  {
+    "name": "Backed-up loads",
+    "description": "Circuits / loads intended to operate, plus any explicit exclusions."
+  },
+  {
+    "name": "Load management",
+    "description": "Modules, priorities, sequencing assumptions, and which large loads may be shed or delayed."
+  },
+  {
+    "name": "Electrical service work",
+    "description": "Panel/service assessment, required modifications, disconnect/service-equipment scope, and utility coordination if needed."
+  },
+  {
+    "name": "Conductors and route",
+    "description": "Conduit, wiring route, trenching, penetrations, restoration, and distance assumptions."
+  },
+  {
+    "name": "Fuel capacity check",
+    "description": "Who verifies available pressure/flow or propane supply for the exact generator and planned connected loads."
+  },
+  {
+    "name": "Fuel-line work",
+    "description": "Pipe / regulator / meter / tank work, trenching, connections, testing, and items assigned to another trade or utility."
+  },
+  {
+    "name": "Generator location",
+    "description": "Proposed location and confirmation that manufacturer clearances, service access, drainage, openings, and local rules will be checked."
+  },
+  {
+    "name": "Base and site preparation",
+    "description": "Approved pad/base, grading, drainage, lifting/access, vegetation or obstruction work, and restoration."
+  },
+  {
+    "name": "Permits and inspections",
+    "description": "Which permits, applications, inspection fees, utility approvals, and HOA/property approvals are included or owner-paid."
+  },
+  {
+    "name": "Startup and commissioning",
+    "description": "Initial setup, transfer test / simulated outage where appropriate, operating checks, and owner orientation."
+  },
+  {
+    "name": "Accessories",
+    "description": "Battery, cold-weather kits, monitoring hardware/subscription, surge protection, fascia, load modules, or other accessories."
+  },
+  {
+    "name": "Warranty and registration",
+    "description": "Generator and ATS warranty documents, registration/activation responsibility, coverage start, and local warranty-service contact."
+  },
+  {
+    "name": "Exclusions and allowances",
+    "description": "Every item not included, every provisional allowance, and conditions that can change price after work begins."
+  },
+  {
+    "name": "Commercial terms",
+    "description": "Taxes, payment schedule, deposit, estimated schedule assumptions, cancellation terms, and written change-order process."
+  }
+];
+
 const proposalFields = [
   'Generator + fuel rating',
   'ATS / transfer equipment',
@@ -60,31 +127,42 @@ const proposalFields = [
   <section id="checklist">
     <h2>The 16-line standby-generator quote checklist</h2>
     <p>Ask the contractor to mark each item as <strong>included</strong>, <strong>excluded</strong>, or <strong>allowance / pending site verification</strong>. If a line does not apply, have the proposal say so rather than leaving it ambiguous.</p>
-    <div class="not-prose mt-5 overflow-x-auto rounded-xl border border-[#d9e0ea]">
-      <table class="mobile-card-table sm:min-w-[780px] w-full border-collapse text-left text-sm">
-        <caption class="sr-only">Sixteen line items to compare on standby generator proposals</caption>
-        <thead class="bg-[#edf3fb] text-primary">
-          <tr><th scope="col" class="p-3">#</th><th scope="col" class="p-3">Line item</th><th scope="col" class="p-3">What should be stated</th></tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 text-gray-800">
-          <tr><td class="p-3">1</td><th scope="row" class="p-3">Generator</th><td class="p-3">Exact manufacturer, model, voltage/phase, fuel, and fuel-specific standby rating.</td></tr>
-          <tr><td class="p-3">2</td><th scope="row" class="p-3">Transfer equipment</th><td class="p-3">Exact ATS / switch model, amperage, service-entrance rating where applicable, and whether it is included in the quoted package.</td></tr>
-          <tr><td class="p-3">3</td><th scope="row" class="p-3">Backed-up loads</th><td class="p-3">Circuits / loads intended to operate, plus any explicit exclusions.</td></tr>
-          <tr><td class="p-3">4</td><th scope="row" class="p-3">Load management</th><td class="p-3">Modules, priorities, sequencing assumptions, and which large loads may be shed or delayed.</td></tr>
-          <tr><td class="p-3">5</td><th scope="row" class="p-3">Electrical service work</th><td class="p-3">Panel/service assessment, required modifications, disconnect/service-equipment scope, and utility coordination if needed.</td></tr>
-          <tr><td class="p-3">6</td><th scope="row" class="p-3">Conductors and route</th><td class="p-3">Conduit, wiring route, trenching, penetrations, restoration, and distance assumptions.</td></tr>
-          <tr><td class="p-3">7</td><th scope="row" class="p-3">Fuel capacity check</th><td class="p-3">Who verifies available pressure/flow or propane supply for the exact generator and planned connected loads.</td></tr>
-          <tr><td class="p-3">8</td><th scope="row" class="p-3">Fuel-line work</th><td class="p-3">Pipe / regulator / meter / tank work, trenching, connections, testing, and items assigned to another trade or utility.</td></tr>
-          <tr><td class="p-3">9</td><th scope="row" class="p-3">Generator location</th><td class="p-3">Proposed location and confirmation that manufacturer clearances, service access, drainage, openings, and local rules will be checked.</td></tr>
-          <tr><td class="p-3">10</td><th scope="row" class="p-3">Base and site preparation</th><td class="p-3">Approved pad/base, grading, drainage, lifting/access, vegetation or obstruction work, and restoration.</td></tr>
-          <tr><td class="p-3">11</td><th scope="row" class="p-3">Permits and inspections</th><td class="p-3">Which permits, applications, inspection fees, utility approvals, and HOA/property approvals are included or owner-paid.</td></tr>
-          <tr><td class="p-3">12</td><th scope="row" class="p-3">Startup and commissioning</th><td class="p-3">Initial setup, transfer test / simulated outage where appropriate, operating checks, and owner orientation.</td></tr>
-          <tr><td class="p-3">13</td><th scope="row" class="p-3">Accessories</th><td class="p-3">Battery, cold-weather kits, monitoring hardware/subscription, surge protection, fascia, load modules, or other accessories.</td></tr>
-          <tr><td class="p-3">14</td><th scope="row" class="p-3">Warranty and registration</th><td class="p-3">Generator and ATS warranty documents, registration/activation responsibility, coverage start, and local warranty-service contact.</td></tr>
-          <tr><td class="p-3">15</td><th scope="row" class="p-3">Exclusions and allowances</th><td class="p-3">Every item not included, every provisional allowance, and conditions that can change price after work begins.</td></tr>
-          <tr><td class="p-3">16</td><th scope="row" class="p-3">Commercial terms</th><td class="p-3">Taxes, payment schedule, deposit, estimated schedule assumptions, cancellation terms, and written change-order process.</td></tr>
-        </tbody>
-      </table>
+    <div class="quote-checklist not-prose">
+      <div class="quote-checklist-intro">
+        <div>
+          <p class="quote-checklist-kicker">THE WRITTEN-SCOPE CHECKLIST</p>
+          <p class="quote-checklist-intro-title">Make every line item clear before signing.</p>
+          <p class="quote-checklist-intro-description">16 essentials to verify with both installers. Ask for the exact scope and status in the written proposal.</p>
+        </div>
+        <a class="quote-checklist-jump" href="#comparison-sheet">Open A/B worksheet <span aria-hidden="true">↗</span></a>
+      </div>
+
+      <ol class="quote-checklist-cards" aria-label="Sixteen standby generator quote checklist items">
+        {quoteChecklistItems.map((item,index)=>(
+          <li class="quote-checklist-card">
+            <div class="quote-checklist-card-heading">
+              <span class="quote-checklist-number" aria-hidden="true">{String(index+1).padStart(2,'0')}</span>
+              <h3>{item.name}</h3>
+            </div>
+            <p>{item.description}</p>
+          </li>
+        ))}
+      </ol>
+
+      <div class="quote-checklist-table-wrap" role="region" aria-label="Sixteen line item quote checklist table" tabindex="0">
+        <table class="quote-checklist-table">
+          <caption class="sr-only">Sixteen line items to compare on standby generator proposals</caption>
+          <thead>
+            <tr><th scope="col">#</th><th scope="col">Line item</th><th scope="col">What should be stated in writing</th></tr>
+          </thead>
+          <tbody>
+            {quoteChecklistItems.map((item,index)=>(
+              <tr><td>{String(index+1).padStart(2,'0')}</td><th scope="row">{item.name}</th><td>{item.description}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="quote-checklist-footnote"><strong>No unanswered assumptions.</strong> Have each installer document what is included, excluded or still subject to an allowance or site verification.</p>
     </div>
   </section>
 
@@ -454,5 +532,208 @@ const proposalFields = [
       background: #fff !important;
       font-size: 8pt;
     }
+  }
+</style>
+
+<style>
+  /* Dedicated read-only checklist: avoid the generic table-as-cards stylesheet,
+     which repeats headings three times for every item on mobile. */
+  .quote-checklist {
+    min-width: 0;
+    overflow: hidden;
+    margin: 1.4rem 0 2.1rem;
+    border: 1px solid #d9e5dc;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 12px 35px rgba(27, 58, 41, 0.045);
+  }
+  .quote-checklist-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    padding: clamp(1.15rem, 3vw, 1.7rem);
+    border-bottom: 1px solid #dce8de;
+    background: linear-gradient(120deg, #f2f7f2, #fbfcf8);
+  }
+  .quote-checklist-kicker {
+    margin: 0 0 .35rem !important;
+    color: #476e57;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    line-height: 1.5;
+  }
+  .quote-checklist-intro-title {
+    margin: 0 !important;
+    color: #1d4032;
+    font: 500 clamp(1.3rem, 2.3vw, 1.65rem)/1.26 Georgia, 'Times New Roman', serif;
+  }
+  .quote-checklist-intro-description {
+    margin: .4rem 0 0 !important;
+    max-width: 58ch;
+    color: #455b4d;
+    font-size: .92rem;
+    line-height: 1.6;
+  }
+  .quote-checklist-jump {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+    gap: .5rem;
+    padding: .72rem .95rem;
+    border: 1px solid #224635;
+    border-radius: .4rem;
+    background: #203d32;
+    color: white !important;
+    font-size: .84rem;
+    font-weight: 750;
+    line-height: 1.35;
+    text-decoration: none !important;
+  }
+  .quote-checklist-jump:hover { background: #315945; }
+  .quote-checklist-jump:focus-visible, .quote-checklist-table-wrap:focus-visible {
+    outline: 3px solid #dfa85f;
+    outline-offset: 3px;
+  }
+  .quote-checklist-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .8rem;
+    margin: 0 !important;
+    padding: .9rem !important;
+    list-style: none !important;
+    background: #f9fbf8;
+  }
+  .quote-checklist-card {
+    min-width: 0;
+    margin: 0 !important;
+    padding: 1rem 1.05rem;
+    border: 1px solid #dde8de;
+    border-radius: .75rem;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(20, 42, 32, .025);
+  }
+  .quote-checklist-card-heading {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .55rem;
+  }
+  .quote-checklist-number {
+    display: grid;
+    flex: 0 0 2.15rem;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: .48rem;
+    background: #eef3e8;
+    color: #356249;
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    line-height: 1;
+  }
+  .quote-checklist-card h3 {
+    margin: 0 !important;
+    color: #213e30;
+    font-size: clamp(1rem, 2vw, 1.08rem);
+    font-weight: 750;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .quote-checklist-card p {
+    margin: 0 !important;
+    color: #45574e;
+    font-size: .91rem;
+    line-height: 1.68;
+    overflow-wrap: anywhere;
+  }
+  .quote-checklist-table-wrap { display: none; }
+  .quote-checklist-footnote {
+    margin: 0 !important;
+    padding: .95rem 1.15rem;
+    border-top: 1px solid #e3e9e0;
+    background: #f6f7f1;
+    color: #485b4a;
+    font-size: .85rem;
+    line-height: 1.62;
+  }
+  .quote-checklist-footnote strong { color: #1d3e30; }
+  @media screen and (min-width: 720px) and (max-width: 1199px) {
+    .quote-checklist-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1.15rem !important; }
+    .quote-checklist-jump { flex-shrink: 0; }
+  }
+  @media screen and (min-width: 1200px) {
+    .quote-checklist-cards { display: none; }
+    .quote-checklist-table-wrap { display: block; overflow-x: auto; }
+    .quote-checklist-table {
+      width: 100%;
+      min-width: 660px;
+      table-layout: fixed;
+      border-collapse: collapse;
+      margin: 0 !important;
+      font-size: .91rem;
+    }
+    .quote-checklist-table th, .quote-checklist-table td {
+      border: 1px solid #e1e8df;
+      padding: .85rem .95rem;
+      text-align: left;
+      line-height: 1.5;
+    }
+    .quote-checklist-table thead th {
+      background: #203c32;
+      color: #fff;
+      font-weight: 750;
+      font-size: .83rem;
+    }
+    .quote-checklist-table th:first-child, .quote-checklist-table td:first-child { width: 8%; }
+    .quote-checklist-table th:nth-child(2) { width: 30%; }
+    .quote-checklist-table th:nth-child(3) { width: 62%; }
+    .quote-checklist-table tbody th {
+      background: transparent;
+      color: #233f31;
+      font-weight: 700;
+    }
+    .quote-checklist-table tbody td:first-child { color: #58705c; font-weight: 800; }
+    .quote-checklist-table tbody tr:nth-child(even) { background: #f6f9f6; }
+  }
+  @media screen and (max-width: 430px) {
+    .quote-checklist-intro { padding: 1rem; }
+    .quote-checklist-jump { width: 100%; }
+    .quote-checklist-cards { gap: .7rem; padding: .7rem !important; }
+    .quote-checklist-card { padding: .9rem; }
+  }
+  @media print {
+    .quote-checklist { border: 0; border-radius: 0; box-shadow: none; overflow: visible; break-inside: auto !important; }
+    .quote-checklist-intro { display: none !important; }
+    .quote-checklist-cards { display: none !important; }
+    .quote-checklist-table-wrap { display: block !important; overflow: visible !important; }
+    .quote-checklist-table {
+      display: table !important;
+      min-width: 0;
+      width: 100%;
+      margin: 0 !important;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 8.5pt;
+    }
+    .quote-checklist-table thead { display: table-header-group; }
+    .quote-checklist-table th, .quote-checklist-table td {
+      border: 1px solid #999 !important;
+      padding: .28rem .4rem;
+      color: #111 !important;
+      line-height: 1.32;
+      text-align: left;
+    }
+    .quote-checklist-table thead th { background: #e5e9e4 !important; color: #111 !important; }
+    .quote-checklist-table tbody tr { break-inside: avoid; }
+    .quote-checklist-table th:first-child, .quote-checklist-table td:first-child { width: 7%; }
+    .quote-checklist-table th:nth-child(2) { width: 29%; }
+    .quote-checklist-table th:nth-child(3) { width: 64%; }
+    .quote-checklist-footnote { background: #fff; padding: .4rem 0; border: 0; font-size: 8pt; }
   }
 </style>
