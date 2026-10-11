@@ -32,6 +32,28 @@ try {
   await fallback.goto(base + '/');
   assert(await fallback.locator('#mobile-nav').isVisible(), 'No-JS mobile navigation');
   assert.equal(await fallback.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'No-JS overflow');
+  // Without scripting, column headers must remain visually available rather
+  // than presenting unlabeled mobile cards. Responsive enhancement is optional.
+  for (const route of [
+    '/comparisons/generac-vs-kohler/',
+    '/maintenance/model-service-schedules/',
+    '/sizing/appliance-wattage-chart/',
+  ]) {
+    await fallback.goto(base + route, { waitUntil: 'networkidle' });
+    const nativeFallback = await fallback.locator('table.mobile-card-table').first().evaluate((table) => {
+      const head = table.querySelector('thead');
+      const tableStyle = getComputedStyle(table);
+      const headerStyle = head ? getComputedStyle(head) : null;
+      return { tableDisplay: tableStyle.display,
+        theadPosition: headerStyle?.position,
+        theadDisplay: headerStyle?.display,
+        enhanced: document.documentElement.classList.contains('enhanced-tables') };
+    });
+    assert.equal(nativeFallback.enhanced, false, `No-JS table unexpectedly enhanced at ${route}`);
+    assert.equal(nativeFallback.tableDisplay, 'table', `No-JS table should be native at ${route}`);
+    assert.equal(nativeFallback.theadDisplay, 'table-header-group', `No-JS headings absent at ${route}`);
+    assert.notEqual(nativeFallback.theadPosition, 'absolute', `No-JS headings clipped at ${route}`);
+  }
   await noJs.close();
 } finally {
   await browser.close();
