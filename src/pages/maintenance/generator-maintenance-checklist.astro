@@ -70,8 +70,14 @@ const toc = [
   <section id="records">
     <h2>Keep a maintenance record</h2>
     <p>Store the model/serial details, manuals, receipts, service reports, controller alerts, and hour readings together. A blank log is provided below; it is a template, not a record of work performed by Standby Generator Guide or by a named service company.</p>
-    <p class="record-instructions">This is a blank paper record template. For a full printable sheet, use the <a href="/maintenance/maintenance-log/">12-entry maintenance log</a>.</p>
-    <div class="record-table-wrap not-prose mt-4 overflow-x-auto rounded-xl border border-[#d9e0ea]">
+    <div class="record-intro">
+      <div>
+        <p class="record-kicker">Maintenance worksheet</p>
+        <p class="record-instructions">Five blank entries for a written maintenance record. Keep actual service documentation with your generator.</p>
+      </div>
+      <a class="record-print-link" href="/maintenance/maintenance-log/">Open full 12-entry printable log <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="record-table-wrap not-prose mt-4 overflow-x-auto rounded-xl border border-[#d9e0ea]" role="region" aria-label="Blank maintenance table; scroll horizontally if needed" tabindex="0">
       <table class="min-w-[640px] w-full border-collapse text-left text-sm">
         <caption class="sr-only">Blank standby generator maintenance record template</caption>
         <thead class="bg-[#edf3fb] text-primary"><tr><th scope="col" class="p-3">Date</th><th scope="col" class="p-3">Hour reading</th><th scope="col" class="p-3">Observation or task per manual</th><th scope="col" class="p-3">Person / service provider</th><th scope="col" class="p-3">Next due per manual</th></tr></thead>
@@ -103,10 +109,63 @@ const toc = [
 </ArticleLayout>
 
 <style>
+
+  .record-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem 1.25rem;
+    margin: 1.2rem 0;
+    padding: 1.2rem 1.35rem;
+    border: 1px solid #d9e2da;
+    border-left: 4px solid #d6a35b;
+    border-radius: 0.65rem;
+    background: #f7f8f4;
+  }
+  .record-intro p { margin: 0; }
+  .record-intro .record-kicker {
+    margin-bottom: 0.25rem;
+    color: #345344;
+    font-size: 0.75rem;
+    font-weight: 750;
+    line-height: 1.4;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  .record-intro .record-instructions { max-width: 38rem; }
+  .record-print-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid #254638;
+    border-radius: 0.4rem;
+    background: #203b34;
+    color: white !important;
+    font-weight: 650;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    text-decoration: none !important;
+  }
+  .record-print-link:hover { background: #345a48; }
+  .record-print-link:focus-visible { outline: 3px solid #e4a64c; outline-offset: 3px; }
+  .record-table-wrap table { font-size: 0.91rem; }
+  .record-table-wrap th { font-weight: 700; font-size: 0.85rem; line-height: 1.4; }
+  .record-table-wrap tbody td { height: 3.35rem; border: 1px solid #e3e9e4; }
+  .record-table-wrap tbody tr:nth-child(even) { background: #f7f9f7; }
+  @media screen and (min-width: 1200px) {
+    .record-table-wrap table { table-layout: fixed; min-width: 100%; }
+    .record-table-wrap th:nth-child(1) { width: 14%; }
+    .record-table-wrap th:nth-child(2) { width: 15%; }
+    .record-table-wrap th:nth-child(3) { width: 30%; }
+    .record-table-wrap th:nth-child(4) { width: 22%; }
+    .record-table-wrap th:nth-child(5) { width: 19%; }
+  }
   /* A true card list on phones avoids Android's unreliable block/table cell
      sizing with empty service-log cells; desktop and print keep a real table. */
   .record-card-list { display: none; }
-  @media screen and (max-width: 639px) {
+  @media screen and (max-width: 1199px) {
     .record-table-wrap { display: none !important; }
     .record-card-list {
       display: grid;
@@ -155,9 +214,15 @@ const toc = [
       border-bottom: 1px solid #9caea4;
     }
   }
+  @media screen and (min-width: 720px) and (max-width: 1199px) {
+    .record-card-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .record-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
   @media print {
     .record-card-list { display: none !important; }
     .record-table-wrap { display: block !important; overflow: visible !important; }
-    .record-instructions { display: none !important; }
+    .record-intro { display: none !important; }
   }
 </style>
