@@ -1,6 +1,33 @@
 ---
+interface Props {
+  category?: string;
+}
+
+const { category = 'Research' } = Astro.props;
+const messages: Record<string, { title: string; body: string }> = {
+  Sizing: {
+    title: 'Sizing is an estimate, not an electrical design',
+    body: 'Check actual equipment nameplates, starting loads and the exact generator ratings. A qualified installer or electrician must verify final sizing and load management for your home.',
+  },
+  Cost: {
+    title: 'Cost figures are planning estimates',
+    body: 'Local installed prices, taxes, site work, permits, fuel arrangements and contractor scope vary. Request itemized, written quotes before relying on any cost example.',
+  },
+  Maintenance: {
+    title: 'Maintenance and safety note',
+    body: 'Service procedures and intervals depend on your exact generator model and manual revision. Follow the current manufacturer instructions and use qualified service for electrical, fuel-system or other restricted work.',
+  },
+  Installation: {
+    title: 'Installation requirements are site-specific',
+    body: 'Placement, clearances, utility requirements and permits depend on the equipment and local authority. Have a qualified installer confirm the applicable requirements before work starts.',
+  },
+};
+const disclaimer = messages[category] ?? {
+  title: 'Research and verification note',
+  body: 'Product specifications, operating conditions and manufacturer guidance may change. Confirm important decisions against the exact model documentation and qualified local professionals; editorial comparisons are not hands-on test results.',
+};
 ---
-<div class="not-prose mt-8 rounded-lg border-l-4 border-orange-500 bg-[#fffbeb] p-4" role="note" aria-label="Planning estimates disclaimer">
-  <p class="text-sm font-semibold text-[#78350f]">Planning estimates disclaimer</p>
-  <p class="mt-1 text-sm leading-relaxed text-[#78350f]">These are planning estimates. Always check appliance nameplate for exact values. Hire a licensed electrician for final sizing.</p>
+<div class="not-prose mt-8 rounded-lg border-l-4 border-[#b8813f] bg-[#faf7f0] p-4" role="note" aria-label={disclaimer.title}>
+  <p class="text-sm font-semibold text-[#593e1f]">{disclaimer.title}</p>
+  <p class="mt-1 text-sm leading-relaxed text-[#593e1f]">{disclaimer.body}</p>
 </div>
