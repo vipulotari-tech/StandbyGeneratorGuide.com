@@ -314,7 +314,7 @@ try {
     '/comparisons/five-brand-standby-generator-comparison/',
     '/research/evidence-ledger/',
   ]) {
-    for (const width of [320, 390, 430, 479, 639]) {
+    for (const width of [320, 390, 430, 479, 639, 640, 768, 980, 1023]) {
       await page.setViewportSize({ width, height: 900 });
       const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
       assert(response?.ok(), `mobile table route failed: ${route}`);
@@ -323,6 +323,29 @@ try {
         `mobile table causes horizontal overflow at ${route} (${width}px)`);
     }
   }
+
+  // A shared editorial note previously showed generator-sizing advice (appliance
+  // nameplate and electrician) on maintenance, safety and brand comparison pages.
+  // Keep the cautions truthful and relevant across every article category.
+  for (const [route, expectedHeading] of [
+    ['/maintenance/generator-maintenance-checklist/', 'Maintenance and safety note'],
+    ['/sizing/what-size-generator-do-i-need/', 'Sizing is an estimate, not an electrical design'],
+    ['/cost/standby-generator-cost/', 'Cost figures are planning estimates'],
+    ['/installation/what-to-expect/', 'Installation requirements are site-specific'],
+    ['/comparisons/generac-vs-kohler/', 'Research and verification note'],
+  ]) {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
+    const note = page.locator('#main [role="note"][aria-label]');
+    const matches = await note.evaluateAll((items, heading) =>
+      items.filter((el) => el.getAttribute('aria-label') === heading).length, expectedHeading);
+    assert.equal(matches, 1, `Wrong editorial disclaimer at ${route}`);
+    if (!route.startsWith('/sizing/')) {
+      assert.equal(await note.filter({ hasText: 'Always check appliance nameplate' }).count(), 0,
+        `Irrelevant sizing note leaked into ${route}`);
+    }
+  }
+
   // Android regression: blank checklist rows must be usable cards, not clipped
   // cells masquerading as cards. Verify every field and line fits its own entry.
   for (const width of [320, 360, 390, 430, 479, 639, 640, 768, 980, 1024, 1199, 1200, 1440]) {
