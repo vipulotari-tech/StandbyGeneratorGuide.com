@@ -435,7 +435,7 @@ try {
     if (shouldShowCards) {
       assert.equal(await cards.locator('li.log-card').count(), 12,
         `twelve editable maintenance cards should exist at ${width}px`);
-      assert.equal(await cards.locator('details').first.getAttribute('open'), '',
+      assert.equal(await cards.locator('details').first().getAttribute('open'), '',
         'first maintenance card should be open on load');
       assert.equal(await cards.locator('details').nth(1).getAttribute('open'), null,
         'subsequent maintenance cards should start collapsed');
