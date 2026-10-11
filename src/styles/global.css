@@ -110,7 +110,7 @@ header :focus-visible {
    box than its cells, which gets clipped by overflow:hidden (observed on Android).
    Screen-only rules deliberately leave print/PDF tables in their native layout. */
 @media screen and (max-width: 1023px) {
-  .mobile-card-table {
+  .enhanced-tables .mobile-card-table {
     display: block !important;
     min-width: 0 !important;
     width: 100% !important;
@@ -123,12 +123,12 @@ header :focus-visible {
   }
   /* Do not override Tailwind's sr-only 1px clipping box: a full-width
      absolutely positioned caption can cause horizontal overflow at 320px. */
-  .mobile-card-table caption:not(.sr-only) {
+  .enhanced-tables .mobile-card-table caption:not(.sr-only) {
     display: block;
     width: 100%;
     text-align: left;
   }
-  .mobile-card-table thead {
+  .enhanced-tables .mobile-card-table thead {
     position: absolute !important;
     width: 1px !important;
     height: 1px !important;
@@ -142,12 +142,12 @@ header :focus-visible {
     white-space: nowrap !important;
     border: 0 !important;
   }
-  .mobile-card-table tbody {
+  .enhanced-tables .mobile-card-table tbody {
     display: block !important;
     width: 100%;
     height: auto !important;
   }
-  .mobile-card-table tbody tr {
+  .enhanced-tables .mobile-card-table tbody tr {
     display: block !important;
     width: 100%;
     height: auto !important;
@@ -157,11 +157,11 @@ header :focus-visible {
     border-radius: 0.75rem;
     background: #fff;
   }
-  .mobile-card-table tbody tr + tr {
+  .enhanced-tables .mobile-card-table tbody tr + tr {
     margin-top: 0.75rem;
   }
-  .mobile-card-table tbody > tr > th,
-  .mobile-card-table tbody > tr > td {
+  .enhanced-tables .mobile-card-table tbody > tr > th,
+  .enhanced-tables .mobile-card-table tbody > tr > td {
     display: grid !important;
     height: auto !important;
     min-height: 0 !important;
@@ -178,10 +178,10 @@ header :focus-visible {
     text-align: left !important;
     overflow-wrap: anywhere;
   }
-  .mobile-card-table tbody > tr > :last-child {
+  .enhanced-tables .mobile-card-table tbody > tr > :last-child {
     border-bottom: 0 !important;
   }
-  .mobile-card-table tbody > tr > [data-label]::before {
+  .enhanced-tables .mobile-card-table tbody > tr > [data-label]::before {
     content: attr(data-label);
     color: var(--color-primary);
     font-size: 0.76rem;
@@ -190,12 +190,12 @@ header :focus-visible {
     letter-spacing: 0.025em;
     text-transform: uppercase;
   }
-  .mobile-card-table tbody > tr > td:empty::after,
-  .mobile-card-table tbody > tr > td:has(> br:only-child)::after {
+  .enhanced-tables .mobile-card-table tbody > tr > td:empty::after,
+  .enhanced-tables .mobile-card-table tbody > tr > td:has(> br:only-child)::after {
     content: " ";
     min-height: 1.25rem;
   }
-  .mobile-card-table + * {
+  .enhanced-tables .mobile-card-table + * {
     margin-top: 1rem;
   }
 
@@ -253,8 +253,8 @@ header :focus-visible {
 /* At phone widths, give long evidence notes their full line rather than a
    cramped 50/50 grid. This also keeps empty service-log fields usable. */
 @media screen and (max-width: 479px) {
-  .mobile-card-table tbody > tr > th,
-  .mobile-card-table tbody > tr > td {
+  .enhanced-tables .mobile-card-table tbody > tr > th,
+  .enhanced-tables .mobile-card-table tbody > tr > td {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 0.3rem;
   }
