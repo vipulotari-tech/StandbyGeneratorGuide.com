@@ -92,6 +92,37 @@ try {
   }
 
 
+  // Cross-category viewport smoke audit. Mobile and a 980px desktop-requested
+  // Android viewport must not overflow the page or shrink major content columns.
+  // This supplements the full 390px route crawl with representative templates.
+  const representativeRoutes = [
+    '/', '/brands/', '/models/', '/comparisons/generac-vs-kohler/',
+    '/comparisons/five-brand-standby-generator-comparison/',
+    '/cost/standby-generator-cost/', '/cost/standby-generator-quote-checklist/',
+    '/sizing/appliance-wattage-chart/', '/sizing/what-size-generator-do-i-need/',
+    '/installation/permits-and-local-requirements/',
+    '/maintenance/generator-maintenance-checklist/', '/maintenance/model-service-schedules/',
+    '/maintenance/maintenance-log/', '/guides/natural-gas-vs-propane/',
+    '/research/evidence-ledger/', '/planning/quotes/', '/contact/',
+  ];
+  for (const width of [320, 768, 980, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of representativeRoutes) {
+      const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
+      assert(response?.ok(), `representative template failed: ${route} at ${width}px`);
+      const layout = await page.evaluate(() => {
+        const main = document.querySelector('#main');
+        const r = main?.getBoundingClientRect();
+        return { overflow: document.documentElement.scrollWidth > innerWidth,
+          width: r?.width ?? 0, viewport: innerWidth, horizontalPosition: r?.left ?? 0 };
+      });
+      assert.equal(layout.overflow, false,
+        `sitewide layout overflow: ${route} at ${width}px: ${JSON.stringify(layout)}`);
+      assert(layout.width > 200 && layout.width <= layout.viewport + 2,
+        `main content collapsed: ${route} at ${width}px: ${JSON.stringify(layout)}`);
+    }
+  }
+
   // A narrow grid-template-columns override previously forced each takeaway into a ~23px column.
   // Check actual text geometry so a page can never pass while showing one-word lines.
   for (const width of [320, 360, 390, 430, 768, 1280]) {
@@ -314,7 +345,7 @@ try {
     '/comparisons/five-brand-standby-generator-comparison/',
     '/research/evidence-ledger/',
   ]) {
-    for (const width of [320, 390, 430, 479, 639]) {
+    for (const width of [320, 390, 430, 479, 639, 640, 768, 980, 1023]) {
       await page.setViewportSize({ width, height: 900 });
       const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
       assert(response?.ok(), `mobile table route failed: ${route}`);
@@ -323,6 +354,29 @@ try {
         `mobile table causes horizontal overflow at ${route} (${width}px)`);
     }
   }
+
+  // A shared editorial note previously showed generator-sizing advice (appliance
+  // nameplate and electrician) on maintenance, safety and brand comparison pages.
+  // Keep the cautions truthful and relevant across every article category.
+  for (const [route, expectedHeading] of [
+    ['/maintenance/generator-maintenance-checklist/', 'Maintenance and safety note'],
+    ['/sizing/what-size-generator-do-i-need/', 'Sizing is an estimate, not an electrical design'],
+    ['/cost/standby-generator-cost/', 'Cost figures are planning estimates'],
+    ['/installation/what-to-expect/', 'Installation requirements are site-specific'],
+    ['/comparisons/generac-vs-kohler/', 'Research and verification note'],
+  ]) {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
+    const note = page.locator('#main [role="note"][aria-label]');
+    const matches = await note.evaluateAll((items, heading) =>
+      items.filter((el) => el.getAttribute('aria-label') === heading).length, expectedHeading);
+    assert.equal(matches, 1, `Wrong editorial disclaimer at ${route}`);
+    if (!route.startsWith('/sizing/')) {
+      assert.equal(await note.filter({ hasText: 'Always check appliance nameplate' }).count(), 0,
+        `Irrelevant sizing note leaked into ${route}`);
+    }
+  }
+
   // Android regression: blank checklist rows must be usable cards, not clipped
   // cells masquerading as cards. Verify every field and line fits its own entry.
   for (const width of [320, 360, 390, 430, 479, 639, 640, 768, 980, 1024, 1199, 1200, 1440]) {

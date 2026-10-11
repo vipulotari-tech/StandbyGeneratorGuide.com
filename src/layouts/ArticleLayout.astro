@@ -157,7 +157,7 @@ if (image) articleSchema.image = `${site}${image}`;
         <div id="article-content" class="prose-hgg article-prose">
           <slot />
         </div>
-        <DataDisclaimer />
+        <DataDisclaimer category={category} />
         <div class="article-ad-space"><AdUnit placement="article-mid" minHeight={280} /></div>
 
         {sources.length > 0 && (

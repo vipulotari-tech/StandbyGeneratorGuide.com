@@ -104,11 +104,12 @@ header :focus-visible {
    unchanged for filled controls; this override is for text utility usage only. */
 .text-accent-dark { color: #B95400; }
 
-/* Responsive semantic tables: preserve the entire row content as readable cards on small screens.
+/* Responsive semantic tables: preserve the entire row content as readable cards on phones and tablets,
+   including Android browsers requesting a ~980px desktop-style viewport.
    Avoid table formatting contexts around block rows: they can calculate a shorter row
    box than its cells, which gets clipped by overflow:hidden (observed on Android).
    Screen-only rules deliberately leave print/PDF tables in their native layout. */
-@media screen and (max-width: 639px) {
+@media screen and (max-width: 1023px) {
   .mobile-card-table {
     display: block !important;
     min-width: 0 !important;
