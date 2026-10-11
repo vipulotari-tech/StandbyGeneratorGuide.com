@@ -28,11 +28,13 @@ const serviceFields = [
       <h1>Generator maintenance log</h1>
       <p class="log-lede">Enter your generator details and completed service records, then print or save your filled log as a PDF. Entries are homeowner-provided, not proof that service was performed.</p>
       <div class="log-actions no-print">
+        <button type="button" id="download-log" class="button log-download-button" hidden>Generate PDF <span aria-hidden="true">↓</span></button>
         <button type="button" id="print-log" class="button log-print-button">Print / Save as PDF <span aria-hidden="true">↗</span></button>
         <button type="button" id="clear-log" class="log-clear-button">Clear entries</button>
         <a href="/maintenance/model-service-schedules/" class="log-secondary-link">See model-specific schedules <span aria-hidden="true">→</span></a>
       </div>
-      <p class="log-privacy no-print" id="log-privacy">Your draft stays in this browser tab session only. Nothing is uploaded to our website. Save a PDF before closing the tab.</p>
+      <p class="log-download-status no-print" id="log-download-status" role="status" aria-live="polite"></p>
+      <p class="log-privacy no-print" id="log-privacy">Your draft stays in this browser tab session only. Nothing is uploaded to our website. Generate PDF downloads a copy to your device. Save it before closing the tab.</p>
       <p class="log-safety">Follow the exact generator manual. Arrange qualified service for tasks outside the manufacturer's owner instructions.</p>
     </header>
 
@@ -136,6 +138,8 @@ const serviceFields = [
 </BaseLayout>
 
 <script>
+  import { createMaintenancePdf } from '../../lib/maintenancePdf';
+
   const root = document.querySelector<HTMLElement>('.maintenance-log');
   const storageKey = 'sgg-generator-maintenance-log-session-v1';
   if (root) {
@@ -193,6 +197,38 @@ const serviceFields = [
         put(key, values[key] ?? inputsForKey[0]?.value ?? '');
       }
     });
+    const downloadButton = root.querySelector<HTMLButtonElement>('#download-log');
+    const downloadStatus = root.querySelector<HTMLElement>('#log-download-status');
+    if (downloadButton) {
+      downloadButton.hidden = false;
+      downloadButton.addEventListener('click', async () => {
+        downloadButton.disabled = true;
+        if (downloadStatus) downloadStatus.textContent = 'Generating your PDF on this device…';
+        try {
+          const snapshot = (key: string) => values[key] ?? editableGroups.get(key)?.[0]?.value ?? '';
+          const details = Array.from({ length: 7 }, (_, i) => snapshot(`detail-${i}`));
+          const entries = Array.from({ length: 12 }, (_, row) =>
+            Array.from({ length: 5 }, (_, col) => snapshot(`service-${row}-${col}`)));
+          const pdf = await createMaintenancePdf({ details, entries });
+          const url = URL.createObjectURL(pdf);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `generator-maintenance-log-${new Date().toISOString().slice(0, 10)}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          // Mobile browsers may need longer to start a file download.
+          window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+          if (downloadStatus) downloadStatus.textContent = 'PDF generated. Check your browser downloads.';
+        } catch (error) {
+          console.error('Unable to generate maintenance PDF:', error);
+          if (downloadStatus) downloadStatus.textContent =
+            'PDF download failed. Try Print / Save as PDF instead.';
+        } finally {
+          downloadButton.disabled = false;
+        }
+      });
+    }
     root.querySelector('#print-log')?.addEventListener('click', () => {
       for (const [key, group] of editableGroups) put(key, values[key] ?? group[0]?.value ?? '');
       window.print();
@@ -469,6 +505,24 @@ const serviceFields = [
     font-size: .82rem;
     line-height: 1.6;
   }
+  .log-download-button[hidden] { display: none !important; }
+  .log-download-button {
+    min-height: 44px;
+    border: 1px solid #203b34;
+    background: #203b34;
+    color: #fff;
+    cursor: pointer;
+  }
+  .log-download-button:hover { background: #385949; }
+  .log-download-button:disabled { opacity: .6; cursor: wait; }
+  .log-download-button:focus-visible { outline: 3px solid #d69c52; outline-offset: 3px; }
+  .log-download-status {
+    min-height: 1.4rem;
+    margin: .55rem 0 0;
+    color: #305341;
+    font-size: .82rem;
+  }
+  .log-download-status:empty { display: none; }
   .log-clear-button {
     min-height: 44px;
     padding: .6rem .85rem;

@@ -475,6 +475,31 @@ try {
     'draft must remain in current browser-tab session after reload');
   assert.equal(await page.locator('.log-table [data-record-key="service-6-2"]').inputValue(),
     'Replaced battery', 'a later service-entry value was not preserved');
+  // A direct PDF download must contain a complete multi-page document and must
+  // not invoke the browser's print dialog or transmit maintenance data anywhere.
+  const generateButton = page.locator('#download-log');
+  assert(await generateButton.isVisible(), 'Generate PDF button not shown');
+  await page.evaluate(() => { window.__pdfPrintCalls = 0; window.print = () => { window.__pdfPrintCalls += 1; }; });
+  const [download] = await Promise.all([
+    page.waitForEvent('download', { timeout: 30000 }),
+    generateButton.click(),
+  ]);
+  assert.match(download.suggestedFilename(), /^generator-maintenance-log-\d{4}-\d{2}-\d{2}\.pdf$/,
+    'PDF download must have a meaningful filename');
+  const buffer = fs.readFileSync(await download.path());
+  const pdfText = buffer.toString('latin1');
+  assert(pdfText.startsWith('%PDF-1.4'), 'generated file is not a PDF');
+  assert(pdfText.includes('%%EOF'), 'PDF is missing its end marker');
+  assert(pdfText.includes('/Type /Pages'), 'PDF is missing its page tree');
+  assert(pdfText.includes('/Subtype /Image'), 'PDF pages are missing');
+  assert(buffer.length > 15000, 'PDF is unexpectedly small or empty');
+  const pdfPages = [...pdfText.matchAll(/\/Type \/Page \/Parent/g)].length;
+  assert(pdfPages >= 2, 'twelve service records must span at least two PDF pages');
+  assert.equal(await page.evaluate(() => window.__pdfPrintCalls), 0,
+    'Generate PDF must not open the print dialog');
+  assert.match(await page.locator('#log-download-status').textContent(),
+    /PDF generated/, 'download success status missing');
+
   await page.evaluate(() => { window.__printCalls = 0; window.print = () => { window.__printCalls += 1; }; });
   await page.locator('#print-log').click();
   assert.equal(await page.evaluate(() => window.__printCalls), 1,
