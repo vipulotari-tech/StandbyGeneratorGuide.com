@@ -16,6 +16,13 @@ const groups = [
   { id: 'kitchen', title: 'Kitchen and laundry', categories: ['Kitchen', 'Laundry'] },
   { id: 'other', title: 'Lighting, electronics, and medical devices', categories: ['Lighting and electronics', 'Medical'] },
 ];
+const worksheetFields = [
+  'Load / appliance',
+  'Exact make/model',
+  'Nameplate/manual data',
+  'Priority / can be delayed?',
+];
+
 const formatRange = (value: { minimum: number; maximum: number }) =>
   `${value.minimum.toLocaleString('en-US')}–${value.maximum.toLocaleString('en-US')} W`;
 ---
@@ -75,13 +82,280 @@ const formatRange = (value: { minimum: number; maximum: number }) =>
   <section id="worksheet">
     <h2>Printable load worksheet for a professional discussion</h2>
     <p>This static worksheet is for collecting information; it does not calculate a generator size. Use manufacturer labels/manuals, not the example ranges above.</p>
-    <div class="not-prose mt-4 overflow-x-auto rounded-xl border border-[#d9e0ea]">
-      <table class="mobile-card-table min-w-[680px] w-full border-collapse text-left text-sm">
-        <caption class="sr-only">Blank, static generator load-planning worksheet</caption>
-        <thead class="bg-[#edf3fb] text-primary"><tr><th scope="col" class="p-3">Load / appliance</th><th scope="col" class="p-3">Exact make/model</th><th scope="col" class="p-3">Nameplate/manual data</th><th scope="col" class="p-3">Priority / can be delayed?</th></tr></thead>
-        <tbody class="divide-y divide-gray-200">{Array.from({ length: 7 }).map(() => <tr><td class="h-12 p-3">&nbsp;</td><td class="p-3">&nbsp;</td><td class="p-3">&nbsp;</td><td class="p-3">&nbsp;</td></tr>)}</tbody>
-      </table>
+
+    <div class="load-sheet not-prose">
+      <div class="load-sheet-header">
+        <div class="load-sheet-heading">
+          <p class="load-sheet-eyebrow">HOMEOWNER LOAD INVENTORY</p>
+          <h3>Document your essential loads</h3>
+          <p>Seven blank entries to prepare for a professional sizing conversation. Open an entry to see the fields, then print this worksheet to fill it out on paper.</p>
+        </div>
+        <div class="load-sheet-actions">
+          <button type="button" id="print-load-sheet" class="load-sheet-print" hidden>
+            <span aria-hidden="true">↗</span> Print / Save as PDF
+          </button>
+          <a href="/sizing/what-size-generator-do-i-need/" class="load-sheet-guide-link">Read the sizing guide <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+
+      <ol class="load-sheet-cards" aria-label="Seven blank appliance load records">
+        {Array.from({ length: 7 }, (_, index) => (
+          <li class="load-sheet-card">
+            <details open={index === 0}>
+              <summary>
+                <span class="load-sheet-card-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span class="load-sheet-card-title">Appliance / load {index + 1}</span>
+                <span class="load-sheet-card-symbol" aria-hidden="true"></span>
+              </summary>
+              <dl>
+                {worksheetFields.map((field) => (
+                  <div class="load-sheet-field">
+                    <dt>{field}</dt>
+                    <dd><span class="sr-only">Blank space for a handwritten entry on a printed worksheet</span></dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          </li>
+        ))}
+      </ol>
+
+      <div class="load-sheet-table-wrap" role="region" tabindex="0" aria-label="Seven-row printable appliance load worksheet">
+        <table class="load-sheet-table">
+          <caption class="sr-only">Blank seven-row appliance load inventory for paper completion</caption>
+          <thead><tr>{worksheetFields.map((field) => <th scope="col">{field}</th>)}</tr></thead>
+          <tbody>
+            {Array.from({ length: 7 }, (_, index) => (
+              <tr>
+                {worksheetFields.map((field) => (
+                  <td><span class="sr-only">Entry {index + 1}: {field}, blank space for handwriting</span></td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="load-sheet-note"><strong>Bring the facts, not guesses.</strong> Note running input and motor-start information from exact equipment labels and manuals. The installer will check simultaneous loads, the fuel-specific generator rating and transfer equipment.</p>
     </div>
+
     <p class="mt-4">Take this list and photographs of equipment nameplates to a qualified local electrician or generator installer. The final design also depends on transfer equipment, fuel availability and pressure, local requirements, and the exact generator rating on the fuel to be used.</p>
   </section>
 </ArticleLayout>
+
+
+<script>
+  const printLoadSheet = document.querySelector<HTMLButtonElement>('#print-load-sheet');
+  if (printLoadSheet) {
+    printLoadSheet.hidden = false;
+    printLoadSheet.addEventListener('click', () => window.print());
+  }
+</script>
+
+<style>
+  .load-sheet {
+    min-width: 0;
+    overflow: hidden;
+    margin: 1.4rem 0 2rem;
+    border: 1px solid #dce7dd;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 12px 38px rgba(25, 55, 38, .06);
+  }
+  .load-sheet-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.1rem 1.5rem;
+    padding: clamp(1.15rem, 3vw, 1.7rem);
+    border-bottom: 1px solid #dae6dc;
+    background: linear-gradient(125deg, #f1f6ef, #fafbf7);
+  }
+  .load-sheet-heading { min-width: 0; flex: 1 1 16rem; }
+  .load-sheet-eyebrow {
+    margin: 0 0 .4rem !important;
+    color: #4d7058;
+    font-size: .71rem;
+    letter-spacing: .12em;
+    line-height: 1.4;
+    font-weight: 800;
+  }
+  .load-sheet-heading h3 {
+    margin: 0 !important;
+    color: #1c3b2e;
+    font: 500 clamp(1.4rem, 3vw, 1.9rem)/1.22 Georgia, 'Times New Roman', serif;
+  }
+  .load-sheet-heading > p:last-child {
+    max-width: 58ch;
+    margin: .45rem 0 0 !important;
+    color: #476053;
+    font-size: .91rem;
+    line-height: 1.65;
+  }
+  .load-sheet-actions { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
+  .load-sheet-print, .load-sheet-guide-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: .5rem;
+    min-height: 46px;
+    padding: .7rem .95rem;
+    font-family: inherit;
+    font-size: .85rem;
+    font-weight: 750;
+    line-height: 1.45;
+    text-align: center;
+    text-decoration: none !important;
+    border-radius: .45rem;
+  }
+  .load-sheet-print[hidden] { display: none !important; }
+  .load-sheet-print {
+    color: #fff;
+    background: #203e32;
+    border: 1px solid #203e32;
+    cursor: pointer;
+  }
+  .load-sheet-print:hover { background: #365746; }
+  .load-sheet-guide-link {
+    color: #244738 !important;
+    border: 1px solid #a6bbaa;
+    background: #fff;
+  }
+  .load-sheet-guide-link:hover { background: #e8f0e7; }
+  .load-sheet-print:focus-visible, .load-sheet-guide-link:focus-visible,
+  .load-sheet-card summary:focus-visible, .load-sheet-table-wrap:focus-visible {
+    outline: 3px solid #daa254;
+    outline-offset: 3px;
+  }
+  .load-sheet-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .8rem;
+    margin: 0 !important;
+    padding: 1rem !important;
+    list-style: none !important;
+    background: #f8faf7;
+  }
+  .load-sheet-card {
+    min-width: 0;
+    margin: 0 !important;
+    border: 1px solid #dce6dc;
+    border-radius: .7rem;
+    background: #fff;
+    overflow: hidden;
+  }
+  .load-sheet-card details { margin: 0; }
+  .load-sheet-card summary {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-height: 66px;
+    padding: .85rem 1rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .load-sheet-card summary::-webkit-details-marker { display: none; }
+  .load-sheet-card summary::marker { content: ''; }
+  .load-sheet-card-number {
+    flex: 0 0 2.15rem;
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: .42rem;
+    background: #edf3eb;
+    color: #375e48;
+    font-size: .81rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .load-sheet-card-title {
+    min-width: 0;
+    color: #1f4032;
+    font-weight: 750;
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+  .load-sheet-card-symbol {
+    display: grid;
+    place-items: center;
+    margin-left: auto;
+    flex: 0 0 1.8rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1px solid #d4e0d5;
+    border-radius: 50%;
+    color: #35634a;
+  }
+  .load-sheet-card-symbol::before { content: '+'; font-size: 1.2rem; line-height: 1; }
+  .load-sheet-card details[open] .load-sheet-card-symbol::before { content: '−'; }
+  .load-sheet-card details[open] summary { border-bottom: 1px solid #e3eae2; }
+  .load-sheet-card dl { margin: 0; padding: .25rem 1rem .8rem; }
+  .load-sheet-field { min-width: 0; padding: .65rem 0 .5rem; }
+  .load-sheet-field + .load-sheet-field { border-top: 1px solid #edf1eb; }
+  .load-sheet-field dt {
+    color: #355645;
+    font-size: .8rem;
+    font-weight: 750;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .load-sheet-field dd {
+    min-height: 1.65rem;
+    margin: .3rem 0 0;
+    border-bottom: 1px solid #a6b9aa;
+  }
+  .load-sheet-table-wrap { display: none; }
+  .load-sheet-note {
+    margin: 0 !important;
+    border-top: 1px solid #dfe9df;
+    background: #f8f8f2;
+    padding: 1rem 1.2rem;
+    color: #43594a;
+    font-size: .85rem;
+    line-height: 1.65;
+  }
+  .load-sheet-note strong { color: #1b4031; }
+  @media screen and (min-width: 720px) and (max-width: 1199px) {
+    .load-sheet-cards { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+    .load-sheet-actions { width: 100%; }
+  }
+  @media screen and (max-width: 430px) {
+    .load-sheet-header { padding: 1rem; }
+    .load-sheet-actions { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; }
+    .load-sheet-cards { padding: .7rem !important; gap: .7rem; }
+    .load-sheet-card summary { padding: .85rem .8rem; }
+  }
+  @media screen and (min-width: 1200px) {
+    .load-sheet-cards { display: none; }
+    .load-sheet-table-wrap { display: block; overflow-x: auto; }
+    .load-sheet-table { margin: 0 !important; width: 100%; min-width: 680px; border-collapse: collapse; table-layout: fixed; font-size: .87rem; }
+    .load-sheet-table thead th {
+      padding: .85rem .9rem;
+      background: #203e32;
+      color: #fff;
+      border: 1px solid #365b47;
+      font-size: .82rem;
+      font-weight: 750;
+      text-align: left;
+      line-height: 1.45;
+    }
+    .load-sheet-table tbody td { height: 3.1rem; border: 1px solid #dce6dc; background: #fff; }
+    .load-sheet-table tbody tr:nth-child(even) td { background: #f7faf7; }
+  }
+  @media print {
+    .load-sheet { overflow: visible; border: 0; border-radius: 0; box-shadow: none; break-inside: auto !important; }
+    .load-sheet-header { padding: .45rem 0; border: 0; background: #fff !important; }
+    .load-sheet-eyebrow { color: #444; font-size: 8pt; }
+    .load-sheet-heading h3 { color: #000; font-size: 17pt; }
+    .load-sheet-heading > p:last-child, .load-sheet-actions, .load-sheet-cards { display: none !important; }
+    .load-sheet-table-wrap { display: block !important; overflow: visible !important; }
+    .load-sheet-table { display: table !important; width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; margin: 0 !important; font-size: 8.5pt; }
+    .load-sheet-table thead { display: table-header-group; }
+    .load-sheet-table th, .load-sheet-table td { border: 1px solid #666 !important; padding: .4rem .45rem; text-align: left; color: #000 !important; }
+    .load-sheet-table thead th { background: #e6eae6 !important; color: #000 !important; }
+    .load-sheet-table tbody tr { break-inside: avoid; }
+    .load-sheet-table tbody td { height: 2.9rem; }
+    .load-sheet-note { margin-top: .45rem !important; padding: .45rem 0; border: 0; background: #fff !important; font-size: 8pt; }
+  }
+</style>
