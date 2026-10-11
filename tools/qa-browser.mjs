@@ -323,6 +323,48 @@ try {
         `mobile table causes horizontal overflow at ${route} (${width}px)`);
     }
   }
+  // Android regression: blank checklist rows must be usable cards, not clipped
+  // cells masquerading as cards. Verify every field and line fits its own entry.
+  for (const width of [320, 360, 390, 430, 479, 639, 640, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${baseUrl}/maintenance/generator-maintenance-checklist/`, { waitUntil: 'networkidle' });
+    const mobile = width < 640;
+    const cards = page.locator('#records .record-card-list');
+    const table = page.locator('#records .record-table-wrap');
+    assert.equal(await cards.isVisible(), mobile, `maintenance record cards visibility at ${width}px`);
+    assert.equal(await table.isVisible(), !mobile, `maintenance desktop table visibility at ${width}px`);
+    if (mobile) {
+      assert.equal(await cards.locator('li.record-card').count(), 5, `maintenance mobile entry count at ${width}px`);
+      const fits = await cards.locator('li.record-card').evaluateAll((entries) => entries.map((entry) => {
+        const card = entry.getBoundingClientRect();
+        const fields = [...entry.querySelectorAll('.record-field')];
+        return {
+          count: fields.length,
+          fits: fields.every((field) => {
+            const rect = field.getBoundingClientRect();
+            const label = field.querySelector('dt')?.getBoundingClientRect();
+            const line = field.querySelector('dd')?.getBoundingClientRect();
+            return rect.top >= card.top - 1 && rect.bottom <= card.bottom + 1 &&
+              rect.left >= card.left - 1 && rect.right <= card.right + 1 &&
+              Boolean(label && line && line.top >= label.bottom - 1 && line.width > 100);
+          }),
+        };
+      }));
+      assert(fits.every((entry) => entry.count === 5 && entry.fits),
+        `maintenance mobile fields clipped/overlapping at ${width}px: ${JSON.stringify(fits)}`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+        `maintenance mobile cards overflow at ${width}px`);
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`${baseUrl}/maintenance/generator-maintenance-checklist/`, { waitUntil: 'networkidle' });
+  await page.emulateMedia({ media: 'print' });
+  assert.equal(await page.locator('#records .record-table-wrap').isVisible(), true,
+    'checklist print must retain its original record table');
+  assert.equal(await page.locator('#records .record-card-list').isVisible(), false,
+    'checklist mobile cards must not duplicate printed content');
+  await page.emulateMedia({ media: 'screen' });
+
   // Print/PDF must retain native table layout and all 12 service-log rows.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto(`${baseUrl}/maintenance/maintenance-log/`, { waitUntil: 'networkidle' });
