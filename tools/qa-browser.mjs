@@ -325,10 +325,10 @@ try {
   }
   // Android regression: blank checklist rows must be usable cards, not clipped
   // cells masquerading as cards. Verify every field and line fits its own entry.
-  for (const width of [320, 360, 390, 430, 479, 639, 640, 768, 1440]) {
+  for (const width of [320, 360, 390, 430, 479, 639, 640, 768, 980, 1024, 1199, 1200, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${baseUrl}/maintenance/generator-maintenance-checklist/`, { waitUntil: 'networkidle' });
-    const mobile = width < 640;
+    const mobile = width < 1200;
     const cards = page.locator('#records .record-card-list');
     const table = page.locator('#records .record-table-wrap');
     assert.equal(await cards.isVisible(), mobile, `maintenance record cards visibility at ${width}px`);
@@ -365,6 +365,37 @@ try {
     'checklist mobile cards must not duplicate printed content');
   await page.emulateMedia({ media: 'screen' });
 
+  // A mobile browser requesting a desktop-size (~980px) viewport must still
+  // show writable labels, never an unreadable five-column grid. On wide desktops
+  // the full semantic table remains visible, and print includes all 12 rows.
+  for (const width of [320, 390, 430, 640, 768, 980, 1024, 1199, 1200, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${baseUrl}/maintenance/maintenance-log/`, { waitUntil: 'networkidle' });
+    const cards = page.locator('.maintenance-log .log-card-list');
+    const table = page.locator('.maintenance-log .log-table-wrap');
+    const shouldShowCards = width < 1200;
+    assert.equal(await cards.isVisible(), shouldShowCards, `printable log card visibility at ${width}px`);
+    assert.equal(await table.isVisible(), !shouldShowCards, `printable log table visibility at ${width}px`);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+      `printable log horizontal overflow at ${width}px`);
+    if (shouldShowCards) {
+      const measurements = await cards.locator('li.log-card').evaluateAll((items) => items.map((el) => {
+        const container = el.getBoundingClientRect();
+        const fields = [...el.querySelectorAll('.log-card-field')];
+        return { count: fields.length, valid: fields.every((f) => {
+          const box = f.getBoundingClientRect();
+          const name = f.querySelector('dt')?.getBoundingClientRect();
+          const line = f.querySelector('dd')?.getBoundingClientRect();
+          return box.left >= container.left - 2 && box.right <= container.right + 2 &&
+            box.top >= container.top - 2 && box.bottom <= container.bottom + 2 &&
+            Boolean(name && line && line.top >= name.bottom - 1 && line.width > 100);
+        }) };
+      }));
+      assert.equal(measurements.length, 4, `expected four log screen preview cards at ${width}px`);
+      assert(measurements.every((m) => m.count === 5 && m.valid),
+        `log field overlap/clipping at ${width}px: ${JSON.stringify(measurements)}`);
+    }
+  }
   // Print/PDF must retain native table layout and all 12 service-log rows.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto(`${baseUrl}/maintenance/maintenance-log/`, { waitUntil: 'networkidle' });
@@ -372,6 +403,10 @@ try {
   assert.equal(await page.locator('.maintenance-log tbody tr:visible').count(), 12, 'service-log print lost record rows');
   assert.equal(await page.locator('.maintenance-log table').evaluate((el) => getComputedStyle(el).display), 'table',
     'service-log print must be a semantic table, not mobile cards');
+  assert.equal(await page.locator('.maintenance-log .log-card-list').isVisible(), false,
+    'service-log print must not duplicate mobile cards');
+  assert.equal(await page.locator('.maintenance-log .log-table-wrap').isVisible(), true,
+    'print must display 12-entry table');
   await page.emulateMedia({ media: 'screen' });
 
   // Full generated-route crawl: every static index page gets a mobile load,
