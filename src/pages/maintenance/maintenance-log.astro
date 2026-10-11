@@ -20,17 +20,19 @@ const serviceFields = [
 ---
 <BaseLayout
   title="Printable Generator Maintenance Log"
-  description="Print a blank generator service log for model, serial number, manual revision, operating hours, service work and next due dates."
+  description="Fill a private generator maintenance log online, then print or save a PDF with your model, service records, running hours and due dates."
 >
   <article class="editorial-container publication-section maintenance-log">
     <header class="log-header">
       <p class="log-eyebrow">Standby Generator Guide / Homeowner worksheet</p>
       <h1>Generator maintenance log</h1>
-      <p class="log-lede">Keep a clear record of your generator details, service visits and running hours. This is a blank worksheet—not proof that any maintenance was performed.</p>
+      <p class="log-lede">Enter your generator details and completed service records, then print or save your filled log as a PDF. Entries are homeowner-provided, not proof that service was performed.</p>
       <div class="log-actions no-print">
         <button type="button" id="print-log" class="button log-print-button">Print / Save as PDF <span aria-hidden="true">↗</span></button>
+        <button type="button" id="clear-log" class="log-clear-button">Clear entries</button>
         <a href="/maintenance/model-service-schedules/" class="log-secondary-link">See model-specific schedules <span aria-hidden="true">→</span></a>
       </div>
+      <p class="log-privacy no-print" id="log-privacy">Your draft stays in this browser tab session only. Nothing is uploaded to our website. Save a PDF before closing the tab.</p>
       <p class="log-safety">Follow the exact generator manual. Arrange qualified service for tasks outside the manufacturer's owner instructions.</p>
     </header>
 
@@ -43,12 +45,19 @@ const serviceFields = [
         </div>
       </div>
       <dl class="log-identity">
-        {generatorDetails.map((label) => (
-          <div class="identity-field">
-            <dt>{label}</dt>
-            <dd><span class="sr-only">Blank space to complete on paper</span></dd>
-          </div>
-        ))}
+        {generatorDetails.map((label, index) => {
+          const key = `detail-${index}`;
+          const id = `log-detail-${index}`;
+          return (
+            <div class="identity-field">
+              <dt><label for={id}>{label}</label></dt>
+              <dd>
+                <input id={id} class="log-editable" data-record-key={key} type="text" maxlength="200" autocomplete="off" placeholder="Enter details" />
+                <span class="log-print-value" data-print-key={key} aria-hidden="true"></span>
+              </dd>
+            </div>
+          );
+        })}
       </dl>
     </section>
 
@@ -68,27 +77,58 @@ const serviceFields = [
             <tr>{serviceFields.map((label) => <th scope="col">{label}</th>)}</tr>
           </thead>
           <tbody>
-            {Array.from({ length: 12 }, () => <tr>{serviceFields.map(() => <td><span class="sr-only">Blank writing space</span></td>)}</tr>)}
+            {Array.from({ length: 12 }, (_, row) => (
+              <tr>
+                {serviceFields.map((field, col) => {
+                  const key = `service-${row}-${col}`;
+                  return (
+                    <td>
+                      {col === 2 ? (
+                        <textarea class="log-editable log-work-input" data-record-key={key} aria-label={`Entry ${row + 1}: ${field}`} rows="2" maxlength="1000" placeholder="Enter work / observations"></textarea>
+                      ) : (
+                        <input class="log-editable" data-record-key={key} type="text" aria-label={`Entry ${row + 1}: ${field}`} maxlength="200" autocomplete="off" placeholder="Enter details" />
+                      )}
+                      <span class="log-print-value" data-print-key={key} aria-hidden="true"></span>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      <ol class="log-card-list" aria-label="Blank service and inspection entries">
-        {Array.from({ length: 4 }, (_, index) => (
+      <ol class="log-card-list" aria-label="Editable service and inspection entries">
+        {Array.from({ length: 12 }, (_, index) => (
           <li class="log-card">
-            <h3>Entry {String(index + 1).padStart(2, '0')}</h3>
-            <dl>
-              {serviceFields.map((label) => (
-                <div class="log-card-field">
-                  <dt>{label}</dt>
-                  <dd><span class="sr-only">Blank space to complete on paper</span></dd>
-                </div>
-              ))}
-            </dl>
+            <details open={index === 0}>
+              <summary>
+                <span>Entry {String(index + 1).padStart(2, '0')}</span>
+                <span class="log-card-expand" aria-hidden="true"></span>
+              </summary>
+              <dl>
+                {serviceFields.map((label, col) => {
+                  const key = `service-${index}-${col}`;
+                  const id = `log-card-${index}-${col}`;
+                  return (
+                    <div class="log-card-field">
+                      <dt><label for={id}>{label}</label></dt>
+                      <dd>
+                        {col === 2 ? (
+                          <textarea id={id} class="log-editable log-work-input" data-record-key={key} rows="2" maxlength="1000" placeholder="Enter work / observations"></textarea>
+                        ) : (
+                          <input id={id} class="log-editable" data-record-key={key} type="text" maxlength="200" autocomplete="off" placeholder="Enter details" />
+                        )}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </details>
           </li>
         ))}
       </ol>
-      <p class="log-preview-note no-print">Screen preview: 4 entries. <strong>Print / Save as PDF</strong> includes all 12 blank service rows.</p>
+      <p class="log-preview-note no-print">All 12 service entries are editable. Your completed entries also appear in the print/PDF table; blank rows remain available for handwriting.</p>
     </section>
 
     <p class="log-footer-note">Keep service invoices and warranty documentation together with this log. For maintenance intervals, consult the exact model and serial-number manual. <a href="/maintenance/model-service-schedules/" class="no-print">Review sourced model schedules</a>.</p>
@@ -96,7 +136,73 @@ const serviceFields = [
 </BaseLayout>
 
 <script>
-  document.querySelector('#print-log')?.addEventListener('click', () => window.print());
+  const root = document.querySelector<HTMLElement>('.maintenance-log');
+  const storageKey = 'sgg-generator-maintenance-log-session-v1';
+  if (root) {
+    const inputs = [...root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-record-key]')];
+    const editableGroups = new Map<string, (HTMLInputElement | HTMLTextAreaElement)[]>();
+    const printedGroups = new Map<string, HTMLElement[]>();
+    const values: Record<string, string> = Object.create(null);
+
+    for (const input of inputs) {
+      const key = input.dataset.recordKey;
+      if (!key) continue;
+      if (!editableGroups.has(key)) editableGroups.set(key, []);
+      editableGroups.get(key)?.push(input);
+    }
+    for (const span of root.querySelectorAll<HTMLElement>('[data-print-key]')) {
+      const key = span.dataset.printKey;
+      if (!key) continue;
+      if (!printedGroups.has(key)) printedGroups.set(key, []);
+      printedGroups.get(key)?.push(span);
+    }
+
+    const put = (key: string, value: string, source?: HTMLInputElement | HTMLTextAreaElement) => {
+      if (!editableGroups.has(key)) return;
+      values[key] = value;
+      for (const input of editableGroups.get(key) ?? []) {
+        if (input !== source) input.value = value;
+      }
+      for (const span of printedGroups.get(key) ?? []) {
+        span.textContent = value;
+      }
+    };
+    const save = () => {
+      try { sessionStorage.setItem(storageKey, JSON.stringify(values)); } catch { /* Private mode may disable storage. */ }
+    };
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      const draft = saved ? JSON.parse(saved) as Record<string, unknown> : null;
+      if (draft && typeof draft === 'object' && !Array.isArray(draft)) {
+        for (const [key, value] of Object.entries(draft)) {
+          if (typeof value === 'string' && editableGroups.has(key)) put(key, value);
+        }
+      }
+    } catch { /* The worksheet remains functional without session storage. */ }
+
+    root.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+      const key = target.dataset.recordKey;
+      if (!key) return;
+      put(key, target.value, target);
+      save();
+    });
+    window.addEventListener('beforeprint', () => {
+      for (const [key, inputsForKey] of editableGroups) {
+        put(key, values[key] ?? inputsForKey[0]?.value ?? '');
+      }
+    });
+    root.querySelector('#print-log')?.addEventListener('click', () => {
+      for (const [key, group] of editableGroups) put(key, values[key] ?? group[0]?.value ?? '');
+      window.print();
+    });
+    root.querySelector('#clear-log')?.addEventListener('click', () => {
+      if (!window.confirm('Clear all generator details and service entries in this browser tab?')) return;
+      for (const key of editableGroups.keys()) put(key, '');
+      try { sessionStorage.removeItem(storageKey); } catch { /* Nothing is saved remotely. */ }
+    });
+  }
 </script>
 
 <style>
@@ -355,5 +461,85 @@ const serviceFields = [
     .log-table td { height: 2.4rem; background: #fff !important; border: 1px solid #888; }
     .log-table tbody tr:nth-child(n+5) { display: table-row; }
     .log-footer-note { margin-top: 0.45rem; padding: 0.3rem 0; border: 0; background: #fff; font-size: 8pt; }
+  }
+
+  .log-privacy {
+    margin: .95rem 0 0;
+    color: #4c6756;
+    font-size: .82rem;
+    line-height: 1.6;
+  }
+  .log-clear-button {
+    min-height: 44px;
+    padding: .6rem .85rem;
+    border: 1px solid #bdccc1;
+    border-radius: .45rem;
+    color: #2e5340;
+    background: #fff;
+    font-family: inherit;
+    font-size: .87rem;
+    font-weight: 700;
+    line-height: 1.45;
+    cursor: pointer;
+  }
+  .log-clear-button:hover { background: #f0f6f0; }
+  .log-clear-button:focus-visible, .log-card summary:focus-visible, .log-editable:focus-visible {
+    outline: 3px solid #d69c52;
+    outline-offset: 2px;
+  }
+  .log-editable {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: .4rem .1rem;
+    border: 0;
+    border-bottom: 1px solid #a6b9a9;
+    border-radius: 0;
+    outline-offset: 2px;
+    background: transparent;
+    color: #203b34;
+    font-family: inherit;
+    font-size: .9rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .log-editable::placeholder { color: #758a7b; opacity: 1; }
+  textarea.log-editable { min-height: 2.8rem; resize: vertical; }
+  .log-print-value { display: none; }
+  .log-card details { margin: 0; }
+  .log-card summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0 0 .65rem;
+    cursor: pointer;
+    list-style: none;
+    border-bottom: 2px solid #254d3d;
+    color: #234234;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    font-weight: 750;
+  }
+  .log-card summary::-webkit-details-marker { display: none; }
+  .log-card summary::marker { content: ''; }
+  .log-card-expand::before { content: '+'; font-size: 1.25rem; font-weight: 400; }
+  .log-card details[open] .log-card-expand::before { content: '−'; }
+  .log-card details > dl { padding-top: .4rem; }
+  .log-table td .log-editable { font-size: .8rem; }
+  @media print {
+    .log-editable { display: none !important; }
+    .log-print-value {
+      display: block !important;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #000;
+      font: 9pt/1.4 Arial, sans-serif;
+      min-height: 1em;
+    }
+    .identity-field dd { min-height: 1.1rem; }
+    .log-table td { padding: .38rem !important; vertical-align: top; }
+    .log-privacy, .log-clear-button { display: none !important; }
   }
 </style>
