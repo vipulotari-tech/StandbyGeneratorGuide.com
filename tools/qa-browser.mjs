@@ -463,6 +463,63 @@ try {
     'print must display 12-entry table');
   await page.emulateMedia({ media: 'screen' });
 
+  // Regression: the 12-field proposal sheet must not expand into twelve long
+  // generic "Comparison field / Proposal A / Proposal B" cards on Android.
+  // Test normal phones, tablet, desktop-mode mobile and desktop, then PDF.
+  for (const width of [320, 360, 390, 430, 640, 768, 980, 1024, 1199, 1200, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const response = await page.goto(`${baseUrl}/cost/standby-generator-quote-checklist/`, { waitUntil: 'networkidle' });
+    assert(response?.ok(), `quote checklist unavailable at ${width}px`);
+    const cards = page.locator('#comparison-sheet .proposal-card-grid');
+    const table = page.locator('#comparison-sheet .proposal-table-wrap');
+    const cardMode = width < 1200;
+    assert.equal(await cards.isVisible(), cardMode, `proposal cards visibility at ${width}px`);
+    assert.equal(await table.isVisible(), !cardMode, `proposal table visibility at ${width}px`);
+    assert.equal(await page.locator('#comparison-sheet .proposal-card').count(), 12,
+      'All 12 proposal card fields must exist');
+    assert.equal(await page.locator('#comparison-sheet .proposal-comparison-table tbody tr').count(), 12,
+      'The printable table must have all 12 fields');
+    const printButton = page.locator('#print-proposal-sheet');
+    assert.equal(await printButton.isVisible(), true, `quote print action hidden at ${width}px`);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+      `proposal worksheet horizontal overflow at ${width}px`);
+    if (cardMode) {
+      const cardsFit = await cards.locator('.proposal-card').evaluateAll((nodes) => nodes.map((node) => {
+        const outer = node.getBoundingClientRect();
+        const answers = [...node.querySelectorAll('.proposal-card-response')];
+        const lines = [...node.querySelectorAll('.proposal-writing-line')];
+        return {
+          answers: answers.length,
+          labels: [...node.querySelectorAll('.proposal-field-label')].map((e) => e.textContent?.trim()),
+          fits: answers.every((answer) => {
+            const r = answer.getBoundingClientRect();
+            return r.top >= outer.top - 2 && r.bottom <= outer.bottom + 2
+              && r.left >= outer.left - 2 && r.right <= outer.right + 2;
+          }) && lines.length === 2 && lines.every((line) => {
+            const r = line.getBoundingClientRect();
+            return r.width > 110 && r.left >= outer.left - 2 && r.right <= outer.right + 2;
+          }),
+        };
+      }));
+      assert(cardsFit.every((c) => c.answers === 2 && c.fits
+        && c.labels.join('/') === 'Proposal A/Proposal B'),
+        `proposal field labels clipped or missing at ${width}px: ${JSON.stringify(cardsFit)}`);
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`${baseUrl}/cost/standby-generator-quote-checklist/`, { waitUntil: 'networkidle' });
+  await page.evaluate(() => { window.__sheetPrints = 0; window.print = () => { window.__sheetPrints += 1; }; });
+  await page.locator('#print-proposal-sheet').click();
+  assert.equal(await page.evaluate(() => window.__sheetPrints), 1, 'proposal PDF button must invoke printing');
+  await page.emulateMedia({ media: 'print' });
+  assert.equal(await page.locator('#comparison-sheet .proposal-card-grid').isVisible(), false,
+    'mobile proposal cards must not duplicate the print worksheet');
+  assert.equal(await page.locator('#comparison-sheet .proposal-table-wrap').isVisible(), true,
+    'print must display the comparison table');
+  assert.equal(await page.locator('#comparison-sheet .proposal-comparison-table tbody tr:visible').count(), 12,
+    'print must contain 12 legible blank proposal rows');
+  await page.emulateMedia({ media: 'screen' });
+
   // Full generated-route crawl: every static index page gets a mobile load,
   // one-H1, and horizontal-overflow check. This catches new content routes,
   // not just the hand-picked smoke cases above.
