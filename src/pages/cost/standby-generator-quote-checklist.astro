@@ -10,6 +10,21 @@ const toc = [
   { id: 'handoff', label: 'What to get at handoff' },
   { id: 'faq', label: 'Quote questions' },
 ];
+
+const proposalFields = [
+  'Generator + fuel rating',
+  'ATS / transfer equipment',
+  'Backed-up loads',
+  'Load management',
+  'Electrical work',
+  'Fuel work',
+  'Site / pad work',
+  'Permits / inspections',
+  'Commissioning',
+  'Warranty / service',
+  'Allowances / exclusions',
+  'Total written price',
+];
 ---
 <ArticleLayout
   title="Standby Generator Quote Checklist: 16 Line Items to Compare"
@@ -76,16 +91,62 @@ const toc = [
   <section id="comparison-sheet">
     <h2>Side-by-side proposal comparison sheet</h2>
     <p>Use this blank worksheet after both contractors have answered the 16 lines above. Print the page or save it as a PDF from your browser.</p>
-    <div class="not-prose mt-5 overflow-x-auto rounded-xl border border-[#d9e0ea]">
-      <table class="mobile-card-table sm:min-w-[760px] w-full border-collapse text-left text-sm">
-        <caption class="sr-only">Blank proposal comparison worksheet</caption>
-        <thead class="bg-[#edf3fb] text-primary"><tr><th class="p-3">Comparison field</th><th class="p-3">Proposal A</th><th class="p-3">Proposal B</th></tr></thead>
-        <tbody class="divide-y divide-gray-200">
-          {['Generator + fuel rating','ATS / transfer equipment','Backed-up loads','Load management','Electrical work','Fuel work','Site / pad work','Permits / inspections','Commissioning','Warranty / service','Allowances / exclusions','Total written price'].map((label) => (
-            <tr><th scope="row" class="p-3 font-medium text-gray-800">{label}</th><td class="h-12 p-3">&nbsp;</td><td class="p-3">&nbsp;</td></tr>
-          ))}
-        </tbody>
-      </table>
+    <div class="proposal-worksheet not-prose">
+      <div class="proposal-workflow">
+        <div>
+          <p class="proposal-eyebrow">HOMEOWNER DECISION WORKSHEET</p>
+          <p class="proposal-instructions">12 essentials • 2 proposals • One consistent scope. Write the details from each contractor’s signed quote, then compare on paper.</p>
+        </div>
+        <div class="proposal-actions">
+          <button type="button" id="print-proposal-sheet" class="proposal-print-button" hidden>
+            <span aria-hidden="true">↗</span> Print / Save as PDF
+          </button>
+          <a class="proposal-digital-link" href="/planning/quotes/">Compare quotes digitally <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+
+      <ol class="proposal-card-grid" aria-label="Twelve fields for comparing two generator proposals">
+        {proposalFields.map((field, index) => (
+          <li class="proposal-card">
+            <div class="proposal-card-heading">
+              <span class="proposal-card-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <h3>{field}</h3>
+            </div>
+            <div class="proposal-card-responses">
+              <div class="proposal-card-response">
+                <span class="proposal-letter proposal-letter-a">A</span>
+                <span class="proposal-field-label">Proposal A</span>
+                <span class="proposal-writing-line" aria-hidden="true"></span>
+              </div>
+              <div class="proposal-card-response">
+                <span class="proposal-letter proposal-letter-b">B</span>
+                <span class="proposal-field-label">Proposal B</span>
+                <span class="proposal-writing-line" aria-hidden="true"></span>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div class="proposal-table-wrap" role="region" tabindex="0" aria-label="Blank proposal comparison table">
+        <table class="proposal-comparison-table">
+          <caption class="sr-only">Twelve-field printable comparison of proposal A and proposal B</caption>
+          <thead>
+            <tr><th scope="col">Comparison field</th><th scope="col">Proposal A</th><th scope="col">Proposal B</th></tr>
+          </thead>
+          <tbody>
+            {proposalFields.map((field, index) => (
+              <tr>
+                <th scope="row"><span class="proposal-row-number">{String(index + 1).padStart(2, '0')}</span>{field}</th>
+                <td><span class="sr-only">Blank entry for proposal A</span></td>
+                <td><span class="sr-only">Blank entry for proposal B</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="proposal-footnote"><strong>Compare like for like.</strong> An empty cell is an unanswered question—not proof that the item is included. Ask both installers to confirm exclusions and allowances in writing.</p>
     </div>
     <p class="mt-4">A lower total may still be the better proposal, but only after scope is normalized. If one contractor has included panel work, gas capacity changes, a service-rated ATS, or permit fees that another omitted, the totals are not directly comparable.</p>
   </section>
@@ -120,3 +181,271 @@ const toc = [
     ]} />
   </section>
 </ArticleLayout>
+
+
+<script>
+  const printButton = document.querySelector<HTMLButtonElement>('#print-proposal-sheet');
+  if (printButton) {
+    printButton.hidden = false;
+    printButton.addEventListener('click', () => window.print());
+  }
+</script>
+
+<style>
+  /* The editable-on-paper worksheet is intentionally distinct from ordinary
+     comparison tables. Never apply generic mobile-card-table row transformations. */
+  .proposal-worksheet {
+    min-width: 0;
+    margin: 1.5rem 0 2rem;
+    border: 1px solid #dae4dc;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 10px 32px rgba(22, 49, 37, 0.055);
+    overflow: hidden;
+  }
+  .proposal-workflow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.15rem 1.5rem;
+    padding: clamp(1.15rem, 3vw, 1.7rem);
+    border-bottom: 1px solid #dce7df;
+    background: linear-gradient(130deg, #f2f7f3, #fcfdfa);
+  }
+  .proposal-eyebrow {
+    margin: 0 0 0.35rem !important;
+    font-size: 0.71rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.45;
+    color: #38664e;
+  }
+  .proposal-instructions {
+    max-width: 53ch;
+    margin: 0 !important;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: #344d40;
+  }
+  .proposal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+  }
+  .proposal-print-button, .proposal-digital-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 46px;
+    padding: 0.72rem 0.95rem;
+    border-radius: 0.45rem;
+    font: 700 0.85rem/1.4 inherit;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none !important;
+  }
+  .proposal-print-button {
+    border: 1px solid #203b34;
+    color: #fff;
+    background: #203b34;
+  }
+  .proposal-print-button:hover { background: #345749; }
+  .proposal-digital-link {
+    border: 1px solid #a6bdb0;
+    color: #203b34 !important;
+    background: #fff;
+  }
+  .proposal-digital-link:hover { background: #e7f0e9; }
+  .proposal-print-button:focus-visible, .proposal-digital-link:focus-visible,
+  .proposal-table-wrap:focus-visible {
+    outline: 3px solid #da9b44;
+    outline-offset: 3px;
+  }
+  .proposal-card-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+    padding: 1rem !important;
+    margin: 0 !important;
+    list-style: none !important;
+    background: #fafcf9;
+  }
+  .proposal-card {
+    min-width: 0;
+    margin: 0 !important;
+    padding: 1rem 1.05rem;
+    border: 1px solid #dde7dd;
+    border-radius: 0.75rem;
+    background: #fff;
+  }
+  .proposal-card-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid #e5ece6;
+  }
+  .proposal-card-number {
+    flex: 0 0 auto;
+    color: #aa763c;
+    font: 800 0.74rem/1.4 inherit;
+    letter-spacing: 0.08em;
+  }
+  .proposal-card h3 {
+    margin: 0 !important;
+    color: #1e3b30;
+    font-size: clamp(0.98rem, 2.2vw, 1.1rem);
+    font-weight: 750;
+    line-height: 1.45;
+  }
+  .proposal-card-responses { display: grid; grid-template-columns: minmax(0,1fr); }
+  .proposal-card-response {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: 1.7rem minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.55rem;
+    row-gap: 0.25rem;
+    padding: 0.65rem 0 0.35rem;
+  }
+  .proposal-card-response + .proposal-card-response {
+    border-top: 1px solid #eef2ee;
+    margin-top: 0.3rem;
+  }
+  .proposal-letter {
+    display: grid;
+    place-items: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 0.32rem;
+    font-weight: 800;
+    font-size: 0.75rem;
+  }
+  .proposal-letter-a { color: #fff; background: #244a3b; }
+  .proposal-letter-b { color: #564021; background: #f2e5ce; }
+  .proposal-field-label {
+    color: #41564a;
+    font-size: 0.83rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .proposal-writing-line {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 1.4rem;
+    border-bottom: 1px solid #a7b9a9;
+  }
+  .proposal-table-wrap { display: none; }
+  .proposal-footnote {
+    margin: 0 !important;
+    padding: 0.95rem 1.15rem;
+    border-top: 1px solid #e0e9e1;
+    background: #f8f8f3;
+    color: #41584a;
+    font-size: 0.85rem;
+    line-height: 1.65;
+  }
+  .proposal-footnote strong { color: #203b34; }
+  @media screen and (min-width: 720px) and (max-width: 1199px) {
+    .proposal-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .proposal-actions { width: 100%; }
+  }
+  @media screen and (min-width: 1200px) {
+    .proposal-card-grid { display: none; }
+    .proposal-table-wrap { display: block; overflow-x: auto; }
+    .proposal-comparison-table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin: 0;
+      font-size: 0.85rem;
+    }
+    .proposal-comparison-table th, .proposal-comparison-table td {
+      border: 1px solid #dfe7de;
+      padding: 0.7rem 0.85rem;
+      text-align: left;
+    }
+    .proposal-comparison-table thead th {
+      background: #203b34;
+      color: #fff;
+      font-weight: 750;
+      font-size: 0.83rem;
+    }
+    .proposal-comparison-table tbody th {
+      width: 40%;
+      color: #203b34;
+      font-weight: 700;
+      background: #fff;
+    }
+    .proposal-comparison-table tbody tr:nth-child(even) { background: #f7faf7; }
+    .proposal-comparison-table tbody td { height: 3.1rem; }
+    .proposal-comparison-table thead th:first-child { width: 40%; }
+    .proposal-comparison-table thead th:not(:first-child) { width: 30%; }
+    .proposal-row-number {
+      display: inline-block;
+      margin-right: 0.75rem;
+      color: #916a39;
+      font-size: 0.69rem;
+      font-weight: 800;
+    }
+  }
+  @media screen and (max-width: 430px) {
+    .proposal-workflow { padding: 1rem; }
+    .proposal-actions { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; }
+    .proposal-card-grid { padding: 0.65rem !important; gap: 0.7rem; }
+    .proposal-card { padding: 0.9rem 0.95rem; }
+  }
+  @media print {
+    .proposal-worksheet {
+      box-shadow: none;
+      border: 0;
+      border-radius: 0;
+      overflow: visible;
+      break-inside: auto !important;
+    }
+    .proposal-workflow {
+      display: block;
+      padding: 0.5rem 0;
+      border: 0;
+      background: #fff !important;
+    }
+    .proposal-eyebrow { color: #444; font-size: 8pt; }
+    .proposal-instructions { max-width: none; color: #222; font-size: 9pt; }
+    .proposal-actions, .proposal-card-grid { display: none !important; }
+    .proposal-table-wrap { display: block !important; overflow: visible !important; }
+    .proposal-comparison-table {
+      display: table !important;
+      width: 100%;
+      min-width: 0;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin: 0 !important;
+      font-size: 9pt;
+    }
+    .proposal-comparison-table thead { display: table-header-group; }
+    .proposal-comparison-table th, .proposal-comparison-table td {
+      padding: 0.4rem;
+      border: 1px solid #555 !important;
+      color: #111 !important;
+      text-align: left;
+    }
+    .proposal-comparison-table thead th { background: #e6eae6 !important; color: #000 !important; }
+    .proposal-comparison-table thead th:first-child { width: 40%; }
+    .proposal-comparison-table thead th:not(:first-child) { width: 30%; }
+    .proposal-comparison-table tbody th { font-weight: 650; }
+    .proposal-comparison-table tbody tr { break-inside: avoid; }
+    .proposal-comparison-table tbody td { height: 2.6rem; }
+    .proposal-row-number { margin-right: 0.35rem; color: #555; }
+    .proposal-footnote {
+      margin: 0.45rem 0 0 !important;
+      padding: 0.4rem 0;
+      border: 0;
+      background: #fff !important;
+      font-size: 8pt;
+    }
+  }
+</style>
