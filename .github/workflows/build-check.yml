@@ -36,6 +36,8 @@ jobs:
         run: npm run test:planning && npm run test:research && npm run validate:evidence
       - name: Build staging
         run: npm run build:staging
+      - name: Unique generated HTML IDs
+        run: node tools/qa-unique-ids.mjs
       - name: Vendored image integrity and payload budgets
         run: npm run qa:assets
       - name: Staging indexing assertions
