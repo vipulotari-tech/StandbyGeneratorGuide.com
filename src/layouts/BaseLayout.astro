@@ -98,6 +98,9 @@ const pageSchema = indexable ? (schema ?? {
         });
       });
     });
+    // Enable the card presentation only after every visible cell has its
+    // source header label. Without JS, the native semantic table stays readable.
+    document.documentElement.classList.add('enhanced-tables');
   </script>
 </body>
 </html>
