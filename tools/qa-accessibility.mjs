@@ -25,6 +25,30 @@ try {
     const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
     results.push({ route: '/', width, violations: violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target) })) });
   }
+  // Audit shared template classes beyond a single 390px viewport. These routes
+  // cover navigation, editable forms, mobile/desktop tables and model content.
+  const templateRoutes = [
+    '/maintenance/maintenance-log/',
+    '/cost/standby-generator-quote-checklist/',
+    '/sizing/appliance-wattage-chart/',
+    '/comparisons/generac-vs-kohler/',
+    '/planning/quotes/',
+    '/models/kohler-26rca/',
+  ];
+  for (const width of [320, 980, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of templateRoutes) {
+      await page.goto(base + route, { waitUntil: 'networkidle' });
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
+      results.push({
+        route, width,
+        violations: violations.map(v => ({
+          id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target),
+        })),
+      });
+    }
+  }
   await page.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), true);
   const noJs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });

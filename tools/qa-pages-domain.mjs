@@ -17,10 +17,21 @@ const paths = [
 
 const results = [];
 
-// 1. Never add a global noindex header: production _headers must not contain it.
+// 1. Host-scoped Pages noindex is safe; global or apex noindex is forbidden.
 const headersFile = fs.readFileSync('dist/_headers', 'utf8');
-assert(!/X-Robots-Tag:\s*noindex/i.test(headersFile), 'dist/_headers must not contain a global X-Robots-Tag noindex');
-results.push('dist/_headers has no global X-Robots-Tag noindex');
+let activePattern = '';
+const robotsScopes = [];
+for (const line of headersFile.split(/\r?\n/)) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) continue;
+  if (!/^\s/.test(line)) activePattern = trimmed;
+  else if (/^X-Robots-Tag:\s*noindex\b/i.test(trimmed)) robotsScopes.push(activePattern);
+}
+assert.deepEqual(robotsScopes.sort(), [
+  'https://standbygeneratorguide.pages.dev/*',
+  'https://:version.standbygeneratorguide.pages.dev/*',
+].sort(), 'Only Pages aliases may have noindex, not the canonical domain');
+results.push('noindex restricted to Pages aliases; canonical domain remains indexable');
 
 // 2. Pages default domain: every path must 301 to the identical apex URL.
 for (const path of paths) {
