@@ -2,6 +2,8 @@
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import AlertBox from '../../components/ui/AlertBox.astro';
 
+const recordFields = ['Date', 'Hour reading', 'Observation or task per manual', 'Person / service provider', 'Next due per manual'];
+
 const toc = [
   { id: 'manual-first', label: 'Start with the exact manual' },
   { id: 'owner-checks', label: 'Simple owner checks' },
@@ -68,13 +70,29 @@ const toc = [
   <section id="records">
     <h2>Keep a maintenance record</h2>
     <p>Store the model/serial details, manuals, receipts, service reports, controller alerts, and hour readings together. A blank log is provided below; it is a template, not a record of work performed by Standby Generator Guide or by a named service company.</p>
-    <div class="not-prose mt-4 overflow-x-auto rounded-xl border border-[#d9e0ea]">
-      <table class="mobile-card-table min-w-[640px] w-full border-collapse text-left text-sm">
+    <p class="record-instructions">This is a blank paper record template. For a full printable sheet, use the <a href="/maintenance/maintenance-log/">12-entry maintenance log</a>.</p>
+    <div class="record-table-wrap not-prose mt-4 overflow-x-auto rounded-xl border border-[#d9e0ea]">
+      <table class="min-w-[640px] w-full border-collapse text-left text-sm">
         <caption class="sr-only">Blank standby generator maintenance record template</caption>
         <thead class="bg-[#edf3fb] text-primary"><tr><th scope="col" class="p-3">Date</th><th scope="col" class="p-3">Hour reading</th><th scope="col" class="p-3">Observation or task per manual</th><th scope="col" class="p-3">Person / service provider</th><th scope="col" class="p-3">Next due per manual</th></tr></thead>
         <tbody class="divide-y divide-gray-200">{Array.from({ length: 5 }).map(() => <tr><td class="h-12 p-3">&nbsp;</td><td class="p-3">&nbsp;</td><td class="p-3">&nbsp;</td><td class="p-3">&nbsp;</td><td class="p-3">&nbsp;</td></tr>)}</tbody>
       </table>
     </div>
+    <ol class="record-card-list" aria-label="Blank maintenance record entries">
+      {Array.from({ length: 5 }, (_, index) => (
+        <li class="record-card">
+          <h3>Entry {index + 1}</h3>
+          <dl>
+            {recordFields.map((field) => (
+              <div class="record-field">
+                <dt>{field}</dt>
+                <dd><span class="sr-only">Blank line to complete on paper</span></dd>
+              </div>
+            ))}
+          </dl>
+        </li>
+      ))}
+    </ol>
   </section>
 
   <section id="long-outage">
@@ -83,3 +101,63 @@ const toc = [
     <p>If the unit was flooded, struck, exposed to a suspected gas leak, or operated abnormally, keep away and contact qualified service before reuse. CPSC cautions that wet electrical equipment can be hazardous and should be professionally inspected before operation.</p>
   </section>
 </ArticleLayout>
+
+<style>
+  /* A true card list on phones avoids Android's unreliable block/table cell
+     sizing with empty service-log cells; desktop and print keep a real table. */
+  .record-card-list { display: none; }
+  @media screen and (max-width: 639px) {
+    .record-table-wrap { display: none !important; }
+    .record-card-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      list-style: none;
+      margin: 1.25rem 0 0;
+      padding: 0;
+    }
+    .record-card {
+      min-width: 0;
+      margin: 0;
+      padding: 1rem 1.1rem;
+      border: 1px solid #d9e0da;
+      border-radius: 0.9rem;
+      background: #fff;
+    }
+    .record-card h3 {
+      margin: 0 0 0.35rem;
+      padding: 0 0 0.6rem;
+      border-bottom: 2px solid #203b34;
+      color: #203b34;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .record-card dl { margin: 0; }
+    .record-card .record-field {
+      min-width: 0;
+      padding: 0.65rem 0 0.45rem;
+    }
+    .record-card .record-field + .record-field {
+      border-top: 1px solid #e5e9e5;
+    }
+    .record-card dt {
+      color: #244239;
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+    .record-card dd {
+      display: block;
+      min-height: 1.65rem;
+      margin: 0.25rem 0 0;
+      border-bottom: 1px solid #9caea4;
+    }
+  }
+  @media print {
+    .record-card-list { display: none !important; }
+    .record-table-wrap { display: block !important; overflow: visible !important; }
+    .record-instructions { display: none !important; }
+  }
+</style>
