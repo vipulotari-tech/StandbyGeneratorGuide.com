@@ -651,6 +651,60 @@ try {
   );
 
 
+  // Blank seven-entry appliance worksheet must never render as 28 repetitive
+  // mobile-card-table label rows. Native details provide useful collapsed entries.
+  for (const width of [320, 360, 390, 430, 640, 719, 720, 768, 980, 1024, 1199, 1200, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const response = await page.goto(`${baseUrl}/sizing/appliance-wattage-chart/`, { waitUntil: 'networkidle' });
+    assert(response?.ok(), `appliance worksheet route unavailable at ${width}px`);
+    const cards = page.locator('#worksheet .load-sheet-cards');
+    const table = page.locator('#worksheet .load-sheet-table-wrap');
+    const mobile = width < 1200;
+    assert.equal(await cards.isVisible(), mobile, `load-entry cards visible at ${width}px`);
+    assert.equal(await table.isVisible(), !mobile, `load table visible at ${width}px`);
+    assert.equal(await cards.locator('li.load-sheet-card').count(), 7, 'seven load cards must be preserved');
+    assert.equal(await table.locator('tbody tr').count(), 7, 'seven printable rows must be preserved');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+      `load worksheet horizontal overflow at ${width}px`);
+    if (mobile) {
+      const entries = cards.locator('details');
+      assert.equal(await entries.nth(0).getAttribute('open'), '', 'first load entry should be open by default');
+      assert.equal(await entries.nth(1).getAttribute('open'), null, 'remaining entries should start collapsed');
+      await entries.nth(1).locator('summary').click();
+      assert.equal(await entries.nth(1).getAttribute('open'), '', 'load entry did not expand on tap');
+      assert.equal(await entries.nth(1).locator('.load-sheet-field:visible').count(), 4,
+        'expanded load card lost fields');
+      const boxes = await entries.nth(1).evaluate((entry) => {
+        const outer = entry.closest('li')?.getBoundingClientRect();
+        return [...entry.querySelectorAll('.load-sheet-field')].map(field => {
+          const f = field.getBoundingClientRect();
+          const label = field.querySelector('dt')?.getBoundingClientRect();
+          const line = field.querySelector('dd')?.getBoundingClientRect();
+          return Boolean(outer && label && line && f.top >= outer.top - 2 &&
+            f.bottom <= outer.bottom + 2 && line.top >= label.bottom - 1 &&
+            line.width > 100 && line.right <= outer.right + 2);
+        });
+      });
+      assert.equal(boxes.length, 4, 'expanded load card has wrong number of fields');
+      assert(boxes.every(Boolean), `expanded load fields clipped at ${width}px`);
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`${baseUrl}/sizing/appliance-wattage-chart/`, { waitUntil: 'networkidle' });
+  const loadPrint = page.locator('#print-load-sheet');
+  assert(await loadPrint.isVisible(), 'print load sheet button should be available with scripts');
+  await page.evaluate(() => { window.__loadPrintCount = 0; window.print = () => { window.__loadPrintCount += 1; }; });
+  await loadPrint.click();
+  assert.equal(await page.evaluate(() => window.__loadPrintCount), 1, 'print button must invoke browser print');
+  await page.emulateMedia({ media: 'print' });
+  assert.equal(await page.locator('#worksheet .load-sheet-cards').isVisible(), false,
+    'mobile load cards must not be duplicated in print');
+  assert.equal(await page.locator('#worksheet .load-sheet-table-wrap').isVisible(), true,
+    'print must show the complete load inventory table');
+  assert.equal(await page.locator('#worksheet .load-sheet-table tbody tr:visible').count(), 7,
+    'print must contain all seven blank load records');
+  await page.emulateMedia({ media: 'screen' });
+
   // Regression for the five-column blank worksheet that previously squeezed into mobile/tablet.
   for (const width of [320, 390, 768, 1024, 1199]) {
     await page.setViewportSize({ width, height: 900 });
