@@ -433,23 +433,79 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
       `printable log horizontal overflow at ${width}px`);
     if (shouldShowCards) {
-      const measurements = await cards.locator('li.log-card').evaluateAll((items) => items.map((el) => {
-        const container = el.getBoundingClientRect();
-        const fields = [...el.querySelectorAll('.log-card-field')];
-        return { count: fields.length, valid: fields.every((f) => {
-          const box = f.getBoundingClientRect();
-          const name = f.querySelector('dt')?.getBoundingClientRect();
-          const line = f.querySelector('dd')?.getBoundingClientRect();
-          return box.left >= container.left - 2 && box.right <= container.right + 2 &&
-            box.top >= container.top - 2 && box.bottom <= container.bottom + 2 &&
-            Boolean(name && line && line.top >= name.bottom - 1 && line.width > 100);
-        }) };
-      }));
-      assert.equal(measurements.length, 4, `expected four log screen preview cards at ${width}px`);
-      assert(measurements.every((m) => m.count === 5 && m.valid),
-        `log field overlap/clipping at ${width}px: ${JSON.stringify(measurements)}`);
+      assert.equal(await cards.locator('li.log-card').count(), 12,
+        `twelve editable maintenance cards should exist at ${width}px`);
+      assert.equal(await cards.locator('details').first.getAttribute('open'), '',
+        'first maintenance card should be open on load');
+      assert.equal(await cards.locator('details').nth(1).getAttribute('open'), null,
+        'subsequent maintenance cards should start collapsed');
+      await cards.locator('details').nth(1).locator('summary').click();
+      assert.equal(await cards.locator('details').nth(1).getAttribute('open'), '',
+        `service entry should expand when tapped at ${width}px`);
+      const measurements = await cards.locator('details').nth(1).evaluate((el) => {
+        const container = el.closest('li')?.getBoundingClientRect();
+        return [...el.querySelectorAll('.log-card-field')].map((field) => {
+          const r = field.getBoundingClientRect();
+          const label = field.querySelector('label')?.getBoundingClientRect();
+          const input = field.querySelector('input, textarea')?.getBoundingClientRect();
+          return Boolean(container && label && input
+            && r.top >= container.top - 2 && r.bottom <= container.bottom + 2
+            && r.left >= container.left - 2 && r.right <= container.right + 2
+            && input.top >= label.bottom - 1 && input.width > 90);
+        });
+      });
+      assert.equal(measurements.length, 5, 'all five service fields must remain editable');
+      assert(measurements.every(Boolean),
+        `maintenance mobile field clipping at ${width}px: ${JSON.stringify(measurements)}`);
     }
   }
+  }
+  // Regression for actual PDF data loss: values entered in mobile cards and
+  // generator identity fields must appear in the printable 12-row table.
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`${baseUrl}/maintenance/maintenance-log/`, { waitUntil: 'networkidle' });
+  await page.locator('#log-detail-0').fill('Generator model ABC / serial 123');
+  await page.locator('.log-card-list [data-record-key="service-0-0"]').fill('2026-10-11');
+  await page.locator('.log-card-list [data-record-key="service-0-2"]').fill('Changed oil; checked alarms');
+  await page.locator('.log-card-list details').nth(6).locator('summary').click();
+  await page.locator('.log-card-list [data-record-key="service-6-2"]').fill('Replaced battery');
+  assert.equal(await page.locator('.log-table [data-record-key="service-0-2"]').inputValue(),
+    'Changed oil; checked alarms', 'mobile values must sync with desktop fields');
+  await page.reload({ waitUntil: 'networkidle' });
+  assert.equal(await page.locator('#log-detail-0').inputValue(), 'Generator model ABC / serial 123',
+    'draft must remain in current browser-tab session after reload');
+  assert.equal(await page.locator('.log-table [data-record-key="service-6-2"]').inputValue(),
+    'Replaced battery', 'a later service-entry value was not preserved');
+  await page.evaluate(() => { window.__printCalls = 0; window.print = () => { window.__printCalls += 1; }; });
+  await page.locator('#print-log').click();
+  assert.equal(await page.evaluate(() => window.__printCalls), 1,
+    'Print / Save as PDF button must invoke the browser print action');
+  await page.emulateMedia({ media: 'print' });
+  assert.equal(await page.locator('.log-identity [data-print-key="detail-0"]').innerText(),
+    'Generator model ABC / serial 123', 'generator model missing from print');
+  assert.equal(await page.locator('.log-table [data-print-key="service-0-0"]').innerText(),
+    '2026-10-11', 'service date missing from print');
+  assert.equal(await page.locator('.log-table [data-print-key="service-0-2"]').innerText(),
+    'Changed oil; checked alarms', 'service details missing from print');
+  assert.equal(await page.locator('.log-table [data-print-key="service-6-2"]').innerText(),
+    'Replaced battery', 'entries after row 4 must appear in print');
+  assert.equal(await page.locator('.log-table .log-editable:visible').count(), 0,
+    'print must not show editable inputs on top of their printed values');
+  assert.equal(await page.locator('.log-table tbody tr:visible').count(), 12,
+    'print should keep all 12 entries');
+  await page.emulateMedia({ media: 'screen' });
+  const dialogPromise = page.waitForEvent('dialog');
+  await page.locator('#clear-log').click();
+  const dialog = await dialogPromise;
+  await dialog.accept();
+  assert.equal(await page.locator('#log-detail-0').inputValue(), '',
+    'clear entries must remove the entered generator model');
+  assert.equal(await page.locator('.log-table [data-print-key="service-0-2"]').textContent(),
+    '', 'clear entries must remove print-mirrored values');
+  await page.reload({ waitUntil: 'networkidle' });
+  assert.equal(await page.locator('#log-detail-0').inputValue(), '',
+    'cleared entries must not reappear after reload');
+
   // Print/PDF must retain native table layout and all 12 service-log rows.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto(`${baseUrl}/maintenance/maintenance-log/`, { waitUntil: 'networkidle' });
