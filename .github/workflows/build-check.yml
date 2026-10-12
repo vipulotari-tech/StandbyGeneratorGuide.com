@@ -36,6 +36,8 @@ jobs:
         run: npm run test:planning && npm run test:research && npm run validate:evidence
       - name: Build staging
         run: npm run build:staging
+      - name: Unique generated HTML IDs
+        run: node tools/qa-unique-ids.mjs
       - name: Vendored image integrity and payload budgets
         run: npm run qa:assets
       - name: Staging indexing assertions
@@ -46,6 +48,8 @@ jobs:
         run: python tools/qa-coverage.py
       - name: Install browser
         run: npx playwright install --with-deps chromium
+      - name: Install PDF inspection tools
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - name: Start staging preview
         run: |
           npx wrangler dev --config wrangler.staging.jsonc --ip 127.0.0.1 --port 8321 > /tmp/hgg-wrangler.log 2>&1 &
@@ -64,6 +68,10 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:8321
         run: npm run qa:browser
+      - name: Every-route viewport and component matrix
+        run: node tools/qa-matrix.mjs
+      - name: Filled maintenance download and browser-print PDF regression
+        run: node tools/qa-pdf.mjs
       - name: Interactive and responsive QA
         env:
           BASE_URL: http://127.0.0.1:8321
@@ -107,7 +115,7 @@ jobs:
           grep -q "https://standbygeneratorguide.com/sitemap-index.xml" dist/robots.txt
           test -f dist/sitemap-index.xml
           ! grep -R -q "standbygeneratorguide.com/404/" dist/sitemap*.xml
-          ! grep -q "X-Robots-Tag: noindex" dist/_headers
+          node tools/qa-indexing.mjs production
 
       - name: Start production preview
         run: |

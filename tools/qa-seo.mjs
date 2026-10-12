@@ -1,6 +1,6 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';import path from 'node:path';
 const files=fs.readdirSync('dist',{recursive:true}).filter(f=>f.endsWith('index.html'));const titles=new Set(),descs=new Set(),routes=new Map();let schemaCount=0,links=0,images=0;
-for(const f of files){const route='/'+f.replaceAll('\\','/').replace(/index\.html$/,'');const html=fs.readFileSync(path.join('dist',f),'utf8');routes.set(route,{html,ids:new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]))});}
+for(const f of files){const route='/'+f.replaceAll('\\','/').replace(/index\.html$/,'');const html=fs.readFileSync(path.join('dist',f),'utf8');const allIds=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);const ids=new Set(allIds);assert.equal(ids.size,allIds.length,'Duplicate HTML IDs on '+route);routes.set(route,{html,ids});}
 for(const [route,{html,ids}] of routes){
  const title=html.match(/<title>(.*?)<\/title>/s)?.[1],desc=html.match(/<meta name="description" content="([^"]*)"/)?.[1];assert(title&&desc,'Missing metadata '+route);assert(!titles.has(title),'Duplicate title '+route);titles.add(title);assert(!descs.has(desc),'Duplicate description '+route);descs.add(desc);
  assert.equal((html.match(/<h1\b/g)??[]).length,1,'H1 '+route);assert(html.includes('lang="en-US"'),'Language '+route);

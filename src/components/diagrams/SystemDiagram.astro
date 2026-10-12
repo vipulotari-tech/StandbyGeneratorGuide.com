@@ -2,12 +2,14 @@
 interface Props { mode?: 'whole' | 'selective'; }
 const { mode = 'whole' } = Astro.props;
 const selective = mode === 'selective';
+// Each visual mode needs its own heading ID when both diagrams appear in one guide.
+const headingId = selective ? 'power-flow-selective-title' : 'power-flow-whole-title';
 ---
-<figure class="system-diagram" aria-labelledby="power-flow-title">
+<figure class="system-diagram" aria-labelledby={headingId}>
   <header class="system-diagram-heading">
     <div>
       <p class="system-diagram-kicker">✦ &nbsp; THE POWER PATHWAY <span aria-hidden="true">/</span> HOME BACKUP SYSTEM</p>
-      <h3 id="power-flow-title">How backup power <em>reaches your home.</em></h3>
+      <h3 id={headingId}>How backup power <em>reaches your home.</em></h3>
     </div>
     <span class="system-diagram-context">{selective ? 'Selected circuits' : 'Whole-panel concept'}</span>
   </header>
