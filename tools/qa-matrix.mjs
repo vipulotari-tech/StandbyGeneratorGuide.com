@@ -4,7 +4,7 @@ import http from 'node:http';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const widths = [320,360,375,390,414,430,768,820,1024,1280,1440,1920];
-const routes = fs.readdirSync('dist',{recursive:true}).filter(f=>f.endsWith('index.html')).map(f=>'/'+f.replaceAll('\\','/').replace(/index\.html$/,'')).sort();
+const routes = fs.readdirSync('dist',{recursive:true}).filter(f=>f.endsWith('.html')).map(f=>'/'+f.replaceAll('\\','/').replace(/index\.html$/,'')).sort();
 const out=process.env.QA_OUTPUT??'.qa/matrix'; fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{
  const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
@@ -27,6 +27,7 @@ try{
   await page.evaluate(()=>document.fonts.ready);
   current.inventory=await page.evaluate(()=>({h1:document.querySelectorAll('h1').length,title:document.title,description:document.querySelector('meta[name=description]')?.content,canonical:document.querySelector('link[rel=canonical]')?.href,robots:document.querySelector('meta[name=robots]')?.content,ids:[...document.querySelectorAll('[id]')].map(e=>e.id),links:[...document.querySelectorAll('a[href]')].map(a=>a.getAttribute('href')),controls:[...document.querySelectorAll('button,input,select,textarea,summary')].map(e=>({tag:e.tagName,type:e.type,id:e.id,name:e.name,label:e.getAttribute('aria-label')??e.textContent?.trim().slice(0,100),visible:!!e.getClientRects().length})),tables:document.querySelectorAll('table').length}));
   const menu=page.locator('#menu-btn');
+  if(await menu.count()){
   await menu.click();
   if(await menu.getAttribute('aria-expanded')!=='true')current.errors.push('Menu did not open');
   await page.keyboard.press('Escape');
@@ -39,6 +40,7 @@ try{
   if(await menu.getAttribute('aria-expanded')!=='false')current.errors.push('Menu remained expanded on desktop');
   await page.setViewportSize({width:390,height:900});
   current.menuTested=true;
+  }
   for(const d of await page.locator('details:visible').all()){
    const before=await d.getAttribute('open');await d.locator('summary').click();if((await d.getAttribute('open'))===before)current.errors.push('Disclosure failed to toggle');await d.locator('summary').click();current.disclosuresTested++;
   }
@@ -73,7 +75,8 @@ for(const row of results)for(const href of row.inventory.links){
   if(url.hash&&!target.inventory.ids.includes(decodeURIComponent(url.hash.slice(1))))brokenLinks.push({route:row.route,href,reason:'Missing fragment target'});
  }else if(!fs.existsSync(path.join('dist',decodeURIComponent(url.pathname))))brokenLinks.push({route:row.route,href,reason:'Missing internal route or file'});
 }
-const orphans=[...incoming].filter(([route,sources])=>route!=='/'&&!sources.size).map(([route])=>route);
+const errorDocuments=new Set(['/404.html','/500.html']);
+const orphans=[...incoming].filter(([route,sources])=>route!=='/'&&!errorDocuments.has(route)&&!sources.size).map(([route])=>route);
 fs.writeFileSync(`${out}/link-graph.json`,JSON.stringify({orphans,brokenLinks},null,2));
 console.log(JSON.stringify({pages:results.length,viewportChecks:results.reduce((n,r)=>n+r.viewports.length,0),controlsInventoried:results.reduce((n,r)=>n+r.inventory.controls.length,0),disclosuresExecuted:results.reduce((n,r)=>n+r.disclosuresTested,0),failedPages:failures.map(r=>({route:r.route,errors:r.errors,overflow:r.viewports.filter(v=>!v.pass),axe:r.accessibility.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.length}))}))},null,2));
 console.log('Internal link graph',JSON.stringify({orphans,brokenLinks}));
