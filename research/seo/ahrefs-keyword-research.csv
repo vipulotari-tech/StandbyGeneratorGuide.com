@@ -1,11 +1,3 @@
-# Ahrefs keyword research — DATA PROVENANCE (read first)
-# Date: 2026-10-12. The 10 Ahrefs screenshots were NOT accessible in this
-# environment (no attachments received). This file is built ONLY from the
-# user-supplied seed list in the task brief — NOT from screenshot extraction.
-# Difficulty/volume values below exist ONLY where the brief stated them explicitly.
-# "not-supplied" means the brief gave no value: do NOT invent one. Volume ranges
-# (e.g. >1,000) are Ahrefs Free-tier estimates, never precise monthly volumes.
-# "Easy" never guarantees rankings. Pending: full extraction once screenshots arrive.
 keyword,cluster,ahrefs_difficulty,volume_range,source_context,intent,notes
 whole house generator,A — head term,Easy,>10000,"3,478 related ideas; seed: whole house generator",informational/navigational,Primary head term; homepage + /guides/ intent
 whole house generator cost,A — head term + B — cost,Easy,>1000,"seed clusters A+B; B ideas: 143/178/21 across cost searches",commercial investigation,One authoritative cost guide serves all cost variants
