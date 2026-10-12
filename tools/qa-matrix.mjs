@@ -33,6 +33,9 @@ try{
   if(await menu.getAttribute('aria-expanded')!=='false')current.errors.push('Menu Escape did not close');
   await menu.press('Enter');
   await page.setViewportSize({width:1280,height:900});
+  // Viewport resizing and its DOM event are asynchronous. Assert the completed
+  // transition rather than sampling between setViewportSize and resize dispatch.
+  await page.waitForFunction(()=>document.getElementById('menu-btn')?.getAttribute('aria-expanded')==='false');
   if(await menu.getAttribute('aria-expanded')!=='false')current.errors.push('Menu remained expanded on desktop');
   await page.setViewportSize({width:390,height:900});
   current.menuTested=true;
