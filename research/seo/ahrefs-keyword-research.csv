@@ -1,0 +1,43 @@
+# Ahrefs keyword research — DATA PROVENANCE (read first)
+# Date: 2026-10-12. The 10 Ahrefs screenshots were NOT accessible in this
+# environment (no attachments received). This file is built ONLY from the
+# user-supplied seed list in the task brief — NOT from screenshot extraction.
+# Difficulty/volume values below exist ONLY where the brief stated them explicitly.
+# "not-supplied" means the brief gave no value: do NOT invent one. Volume ranges
+# (e.g. >1,000) are Ahrefs Free-tier estimates, never precise monthly volumes.
+# "Easy" never guarantees rankings. Pending: full extraction once screenshots arrive.
+keyword,cluster,ahrefs_difficulty,volume_range,source_context,intent,notes
+whole house generator,A — head term,Easy,>10000,"3,478 related ideas; seed: whole house generator",informational/navigational,Primary head term; homepage + /guides/ intent
+whole house generator cost,A — head term + B — cost,Easy,>1000,"seed clusters A+B; B ideas: 143/178/21 across cost searches",commercial investigation,One authoritative cost guide serves all cost variants
+whole house generator installation,A — head term + D — installation,Easy,>1000,"seed clusters A+D; D ideas: 327",informational,National research only — no local installer pages
+best whole house generator,A — head term + C — best,Easy,>1000,"seed clusters A+C; C ideas: 67",commercial investigation,Neutral roundup only; no ranked-best claims without evidence
+whole house generator sizing,A — head term + E — sizing,Easy,>1000,"seed clusters A+E; E ideas: 25",informational,Guides/worksheets/charts; no calculator (positioning preserved)
+generac whole house generator,A — head term,Hard,>1000,seed cluster A,commercial investigation,Brand-hard difficulty noted; /brands/generac/ + models
+kohler whole house generator,A — head term + F — brand,Easy,>1000,"seed clusters A+F; F ideas: 35",commercial investigation,/brands/kohler/ + model records
+house generator cost,B — cost,not-supplied,not-supplied,B ideas: 178,commercial investigation,Serve via main cost guide (same intent)
+cost of whole house generator,B — cost,not-supplied,not-supplied,B ideas: 21,commercial investigation,Serve via main cost guide (same intent)
+average cost of whole house generator,B — cost,not-supplied,not-supplied,user seed list,commercial investigation,Serve via main cost guide (same intent)
+whole house generator cost installed,B — cost,not-supplied,not-supplied,user seed list,commercial investigation,Serve via main cost guide + install-breakdown page
+how much does a whole house generator cost,B — cost,not-supplied,not-supplied,"user seed list; screenshot topic truncated as 'How much does a whole...'",informational (question),Answer-block format on cost guide
+generac whole house generator cost,B — cost,not-supplied,not-supplied,user seed list,commercial investigation,Brand-cost section; verify against sources
+kohler whole house generator cost,B — cost + F — brand,not-supplied,not-supplied,user seed list,commercial investigation,Ownership-cost page exists; verify pricing context
+whole house generator installation costs,B — cost + D — installation,not-supplied,not-supplied,user seed list,commercial investigation,Shared install-cost intent; one section serves singular/plural
+cost of whole house generator installation,B — cost + D — installation,not-supplied,not-supplied,user seed list,commercial investigation,Same intent as above; do not splinter
+best whole house generator 2026,C — best,not-supplied,not-supplied,user seed list,commercial investigation,Year qualifier — refresh discipline required; no dated-best claims
+best whole house generator natural gas,C — best,not-supplied,not-supplied,user seed list,commercial investigation,Fuel-specific angle; natural-gas-vs-propane guide supports
+who makes the best whole house generator,C — best + F — brand,not-supplied,not-supplied,user seed list,commercial investigation,Brand-manufacturer question; five-brand comparison serves
+best whole house generator brand,C — best,not-supplied,not-supplied,user seed list,commercial investigation,Same intent as above; consolidate
+best whole house generator for the money,C — best,not-supplied,not-supplied,user seed list,commercial investigation,Value framing; ownership-cost content supports
+best whole house generator propane,C — best,not-supplied,not-supplied,user seed list,commercial investigation,Fuel-specific angle; propane content supports
+whole house generator installation cost,D — installation,not-supplied,not-supplied,user seed list,commercial investigation,Same intent as cost-of-installation; consolidate
+whole house generator installation near me,D — installation,not-supplied,not-supplied,user seed list,local/transactional,EXCLUDED from targeting — no local pages; site is national research
+whole house generator installation companies,D — installation,not-supplied,not-supplied,user seed list,commercial investigation,No installer directory; serve research-side only (quote checklist)
+whole house generator sizing guide,E — sizing,not-supplied,not-supplied,user seed list,informational,Main sizing guide serves
+whole house generator sizing chart,E — sizing,not-supplied,not-supplied,user seed list,informational,Wattage-chart page serves; verify chart usefulness
+whole house generator sizing for 3000 sq ft home,E — sizing,not-supplied,not-supplied,user seed list,informational,Sq-ft page pattern exists (2000 sq ft); assess before creating
+generac whole house generator sizing,E — sizing,not-supplied,not-supplied,user seed list,informational,Brand + sizing; serve via sizing guide cross-links
+whole house generator sizing guidelines,E — sizing,not-supplied,not-supplied,user seed list,informational,Same intent as sizing guide; consolidate
+generac vs kohler whole house generator,F — brand comparison,not-supplied,not-supplied,user seed list,commercial investigation,Comparison page exists; keep neutral
+kohler whole house generator reviews,F — brand comparison,not-supplied,not-supplied,user seed list,commercial investigation,No hands-on-review claims; source-linked research framing only
+generac or kohler whole house generator,F — brand comparison,not-supplied,not-supplied,user seed list,commercial investigation,Same intent as generac-vs-kohler; consolidate
+kohler whole house generator vs generac,F — brand comparison,not-supplied,not-supplied,user seed list,commercial investigation,Same intent; consolidate (word-order variant)

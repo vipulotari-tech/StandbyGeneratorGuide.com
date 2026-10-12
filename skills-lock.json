@@ -32,6 +32,12 @@
       "sourceType": "custom",
       "skillPath": ".agents/skills/google-adsense/SKILL.md",
       "computedHash": "207a9a09b5a89ab29b3e4a1c1b9e51bd2c7071b988a12e0f21739ab92571b0a9"
+    },
+    "ultimate-seo": {
+      "source": "custom synthesis of claude-seo (AgriciDaniel/claude-seo, MIT) + beyondseo (beyondtahir/beyondseo v2.9.1, MIT); see .agents/skills/ultimate-seo/SKILL.md",
+      "sourceType": "custom",
+      "skillPath": ".agents/skills/ultimate-seo/SKILL.md",
+      "computedHash": "1df46d2b662d69027d898b84e86266d85e515e0d359dde8bb3c57bdc4adfb1d1"
     }
   }
 }
