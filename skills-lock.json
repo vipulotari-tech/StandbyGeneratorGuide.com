@@ -12,6 +12,26 @@
       "sourceType": "github",
       "skillPath": "skills/web-design-guidelines/SKILL.md",
       "computedHash": "d8e7d3afe37dcc8a97b99ffb5afdb4d0919ae0092ea8b68f44eb201f035e33ac"
+    },
+    "technical-seo": {
+      "source": "magnus919/agent-skills",
+      "sourceType": "github",
+      "skillPath": "seo/SKILL.md",
+      "upstreamCommit": "fb3253335cdb1156522901ef52f9897212b2e4b5",
+      "upstreamLicense": "MIT",
+      "computedHash": "3ac36d798ae54d6fe3f2c70bc9e2811208d441c4646d3cc7d09c5e14e9aa190e"
+    },
+    "google-search-console": {
+      "source": "custom (project-authored, see .agents/skills/google-search-console/SOURCES.md)",
+      "sourceType": "custom",
+      "skillPath": ".agents/skills/google-search-console/SKILL.md",
+      "computedHash": "c61ac1f03f1bbce74d542e33ff9e9c900a62edd28b62acf4d129def5374f5b92"
+    },
+    "google-adsense": {
+      "source": "custom (project-authored, see .agents/skills/google-adsense/SOURCES.md)",
+      "sourceType": "custom",
+      "skillPath": ".agents/skills/google-adsense/SKILL.md",
+      "computedHash": "207a9a09b5a89ab29b3e4a1c1b9e51bd2c7071b988a12e0f21739ab92571b0a9"
     }
   }
 }
