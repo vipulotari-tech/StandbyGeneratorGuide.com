@@ -1,19 +1,20 @@
 /**
  * Download a maintenance log as a real PDF without third-party services.
  * The browser renders full-Unicode text onto canvas, then embeds each page as
- * a JPEG in an ISO PDF document. No worksheet data leaves the device.
+ * a JPEG with a positioned Unicode text layer in a US Letter PDF document.
+ * No worksheet data leaves the device.
  */
 export interface MaintenancePdfData {
   details: string[];
   entries: string[][];
 }
 
-const PAGE_W = 595.28;
-const PAGE_H = 841.89;
+const PAGE_W = 612;
+const PAGE_H = 792;
 const SCALE = 2;
 const LEFT = 42;
 const RIGHT = 42;
-const BOTTOM = 795;
+const BOTTOM = PAGE_H - 47;
 const TEXT_X = 217;
 const TEXT_W = PAGE_W - TEXT_X - RIGHT;
 const GREEN = '#203b34';
@@ -58,12 +59,22 @@ function linesFor(ctx: CanvasRenderingContext2D, input: string, width: number): 
   return output.length ? output : [''];
 }
 
+interface PdfText { text: string; x: number; y: number; size: number }
+const pageText = new WeakMap<HTMLCanvasElement, PdfText[]>();
+
 function makePage(): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const canvas = document.createElement('canvas');
   canvas.width = Math.ceil(PAGE_W * SCALE);
   canvas.height = Math.ceil(PAGE_H * SCALE);
   const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) throw new Error('PDF generation needs browser canvas support.');
+  const text: PdfText[] = [];
+  pageText.set(canvas, text);
+  const drawText = ctx.fillText.bind(ctx);
+  ctx.fillText = (value, x, y, maxWidth) => {
+    text.push({ text: value, x, y, size: Number.parseFloat(ctx.font.match(/[\d.]+px/)?.[0] ?? '11') });
+    drawText(value, x, y, maxWidth);
+  };
   ctx.scale(SCALE, SCALE);
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, PAGE_W, PAGE_H);
@@ -136,10 +147,12 @@ function renderPages(data: MaintenancePdfData): HTMLCanvasElement[] {
       y += 18;
       firstLineOnPage = false;
     }
-    nextPageIfNeeded(12);
-    ctx.fillStyle = '#e7ede7';
-    ctx.fillRect(LEFT + 5, y + 3, PAGE_W - LEFT - RIGHT - 10, 0.6);
-    y += 13;
+    // A separator alone must never create a header-only trailing page.
+    if (y + 13 <= BOTTOM) {
+      ctx.fillStyle = '#e7ede7';
+      ctx.fillRect(LEFT + 5, y + 3, PAGE_W - LEFT - RIGHT - 10, 0.6);
+      y += 13;
+    }
   };
 
   startPage();
@@ -166,13 +179,13 @@ function renderPages(data: MaintenancePdfData): HTMLCanvasElement[] {
     footer.strokeStyle = '#d6e0d8';
     footer.lineWidth = .7;
     footer.beginPath();
-    footer.moveTo(LEFT, 805);
-    footer.lineTo(PAGE_W - RIGHT, 805);
+    footer.moveTo(LEFT, PAGE_H - 37);
+    footer.lineTo(PAGE_W - RIGHT, PAGE_H - 37);
     footer.stroke();
     footer.fillStyle = MUTED;
     footer.font = '8px Arial, sans-serif';
-    footer.fillText('Homeowner-entered information; verify all service against the manufacturer manual.', LEFT, 820);
-    footer.fillText(`${index + 1} / ${pages.length}`, PAGE_W - RIGHT - 28, 820);
+    footer.fillText('Homeowner-entered information; verify all service against the manufacturer manual.', LEFT, PAGE_H - 22);
+    footer.fillText(`${index + 1} / ${pages.length}`, PAGE_W - RIGHT - 28, PAGE_H - 22);
     footer.restore();
   });
   return pages;
@@ -191,7 +204,7 @@ function toJpeg(canvas: HTMLCanvasElement): Promise<Uint8Array> {
 }
 
 /** Package page images into a standards-compliant PDF 1.4 with exact byte offsets. */
-function packagePdf(images: { bytes: Uint8Array; width: number; height: number }[]): Blob {
+function packagePdf(images: { bytes: Uint8Array; width: number; height: number; text: PdfText[] }[]): Blob {
   const enc = new TextEncoder();
   const pieces: Uint8Array[] = [];
   let length = 0;
@@ -215,14 +228,21 @@ function packagePdf(images: { bytes: Uint8Array; width: number; height: number }
   object(2, `<< /Type /Pages /Count ${images.length} /Kids [${kids}] >>\n`);
 
   for (let i = 0; i < images.length; i++) {
-    const { bytes, width, height } = images[i];
+    const { bytes, width, height, text } = images[i];
     const imageId = 3 + i * 3, pageId = imageId + 1, contentId = imageId + 2;
     object(imageId,
       `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\n`,
       bytes);
     object(pageId,
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>\n`);
-    const command = enc.encode(`q ${PAGE_W} 0 0 ${PAGE_H} 0 0 cm /Im0 Do Q\n`);
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /XObject << /Im0 ${imageId} 0 R >> /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents ${contentId} 0 R >>\n`);
+    // ActualText preserves Unicode while the canvas retains identical visual output.
+    // Positioned invisible glyphs make entered records searchable and extractable.
+    const textCommands = text.map(({ text: value, x, y, size }) => {
+      const unicode = 'FEFF' + Array.from({ length: value.length }, (_, n) =>
+        value.charCodeAt(n).toString(16).padStart(4, '0')).join('');
+      return `/Span << /ActualText <${unicode}> >> BDC BT /F1 ${size} Tf 3 Tr 1 0 0 1 ${x} ${PAGE_H - y} Tm (x) Tj ET EMC`;
+    }).join('\n');
+    const command = enc.encode(`q ${PAGE_W} 0 0 ${PAGE_H} 0 0 cm /Im0 Do Q\n${textCommands}\n`);
     object(contentId, `<< /Length ${command.byteLength} >>\n`, command);
   }
 
@@ -242,6 +262,7 @@ export async function createMaintenancePdf(data: MaintenancePdfData): Promise<Bl
   const pages = renderPages(data);
   const images = await Promise.all(pages.map(async (canvas) => ({
     bytes: await toJpeg(canvas), width: canvas.width, height: canvas.height,
+    text: pageText.get(canvas) ?? [],
   })));
   return packagePdf(images);
 }

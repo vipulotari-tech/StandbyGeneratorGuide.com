@@ -1,16 +1,17 @@
+import { browserOptions } from './browser-options.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const base=process.env.BASE_URL??'http://127.0.0.1:8321';
-const options={headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--no-zygote','--single-process','--disable-dev-shm-usage']}: {})};
+const options=browserOptions;
 const browser=await chromium.launch(options),context=await browser.newContext(),page=await context.newPage();
 const errors=[],report={routes:0,buttons:0,disclosures:0,images:0,cases:[],accessibility:[]};
 page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
 const go=async path=>{const r=await page.goto(base+path);assert(r.ok(),path);};
 const field=(n,v)=>page.locator(`[name="${n}"]`).fill(String(v));
 const submit=()=>page.locator('[type=submit]').click();
-const check=(name)=>report.cases.push(name);
+const check=(name)=>{report.cases.push(name);console.log('Functional case PASS:',name);};
 async function fits(label){assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,label);}
 async function roundTrip(key){
  const before=await page.locator('.planner-form [name]').evaluateAll(cs=>cs.map(c=>[c.name,c.value]));

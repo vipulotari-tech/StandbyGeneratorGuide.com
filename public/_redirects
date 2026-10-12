@@ -6,7 +6,5 @@
 /sizing/calculator/ /sizing/what-size-generator-do-i-need/ 301
 /sizing/calculator /sizing/what-size-generator-do-i-need/ 301
 
-# Cloudflare Pages production: www -> apex is handled by a zone Redirect Rule
-# (Single Redirect: hostname == www.standbygeneratorguide.com -> 301 to
-# https://standbygeneratorguide.com, preserving path/query). Pages _redirects
-# supports path-only rules, so hostname rules live at the zone level.
+# Cloudflare Pages Functions middleware redirects www and the default Pages
+# hostname to the canonical apex, preserving path and query.

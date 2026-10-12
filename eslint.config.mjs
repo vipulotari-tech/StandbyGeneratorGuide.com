@@ -1,7 +1,7 @@
 export default [{
   ignores: ['node_modules/**', 'dist/**', '.astro/**', '.wrangler/**', '.qa/**', '.agents/**', '.codex/**', '.specify/**', 'claude-seo/**', 'beyondseo/**'],
 }, {
-  files: ['tools/**/*.mjs', 'workers/**/*.mjs', '*.mjs'],
+  files: ['tools/**/*.mjs', 'workers/**/*.mjs', 'functions/**/*.js', '*.mjs'],
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   rules: {
     'no-debugger': 'error',

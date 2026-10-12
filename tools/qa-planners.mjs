@@ -1,6 +1,7 @@
+import { browserOptions } from './browser-options.mjs';
 import assert from 'node:assert/strict';import fs from 'node:fs';import {chromium} from 'playwright';import AxeBuilder from '@axe-core/playwright';
 const base=process.env.BASE_URL??'http://127.0.0.1:8321';
-const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--no-zygote','--single-process','--disable-dev-shm-usage']}: {})});
+const browser=await chromium.launch(browserOptions);
 const context=await browser.newContext();const page=await context.newPage();let errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});fs.mkdirSync('.qa',{recursive:true});
 const go=async path=>{const r=await page.goto(base+path,{waitUntil:'networkidle'});assert(r.ok(),path);};
 const noOverflow=async label=>{const issue=await page.evaluate(()=>({w:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>({tag:e.tagName,cls:e.className,text:e.textContent.slice(0,70),right:e.getBoundingClientRect().right})).slice(0,8)}));assert(issue.scroll<=issue.w,label+' '+JSON.stringify(issue));};

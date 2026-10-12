@@ -21,7 +21,20 @@ if "Sitemap: https://standbygeneratorguide.com/sitemap-index.xml" in robots:
     base_url = "https://standbygeneratorguide.com"
     assert "Disallow: /" not in robots, "production robots.txt blocks the whole site"
     headers = (DIST / "_headers").read_text(encoding="utf-8")
-    assert "X-Robots-Tag: noindex" not in headers, "staging noindex header leaked into production"
+    scope = ""
+    noindex_scopes = []
+    for line in headers.splitlines():
+        text = line.strip()
+        if not text or text.startswith("#"):
+            continue
+        if not line[0].isspace():
+            scope = text
+        elif re.match(r"X-Robots-Tag:\s*noindex\b", text, re.I):
+            noindex_scopes.append(scope)
+    assert sorted(noindex_scopes) == sorted([
+        "https://standbygeneratorguide.pages.dev/*",
+        "https://:version.standbygeneratorguide.pages.dev/*",
+    ]), "noindex must apply only to Pages aliases, never production or global paths"
     sitemap_path = DIST / "sitemap-0.xml"
     index_path = DIST / "sitemap-index.xml"
     assert sitemap_path.is_file() and index_path.is_file(), "production sitemap missing"

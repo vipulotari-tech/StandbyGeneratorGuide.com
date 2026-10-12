@@ -823,6 +823,14 @@ try {
   );
   await page.keyboard.press('Escape');
   assert.equal(await page.getAttribute('#menu-btn', 'aria-expanded'), 'false', 'Escape did not close the menu');
+  await page.click('#menu-btn');
+  await page.locator('#main').click({ position: { x: 8, y: 8 } });
+  assert.equal(await page.getAttribute('#menu-btn', 'aria-expanded'), 'false',
+    'outside tap did not close the mobile navigation');
+  await page.click('#menu-btn');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  assert.equal(await page.getAttribute('#menu-btn', 'aria-expanded'), 'false',
+    'resizing to desktop must reset the expanded navigation state');
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${baseUrl}/sizing/what-size-generator-do-i-need/`, { waitUntil: 'networkidle' });

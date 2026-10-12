@@ -5,23 +5,24 @@
 //   while keeping the custom production domain fully indexable.
 // - Preview deployments (*.standbygeneratorguide.pages.dev, e.g. <hash>--) keep serving
 //   with `X-Robots-Tag: noindex, nofollow` so deployment QA still works without indexing.
-// - Custom domains (apex + www) pass through untouched: no global noindex, no redirect here
-//   (www -> apex lives as a zone Redirect Rule, not in Pages).
+// - www redirects to the canonical apex even when a zone Redirect Rule is absent.
+// - The production apex passes through without noindex.
 //
-// NOTE: `_headers` is path-only and cannot vary by hostname, so a global
-// `X-Robots-Tag: noindex` there would wrongly deindex production. Hostname logic must live here.
+// Never add a global noindex rule: the canonical production host must remain indexable.
 
 const PRODUCTION_HOST = 'standbygeneratorguide.com';
 const PAGES_DEFAULT_HOST = 'standbygeneratorguide.pages.dev';
+const WWW_HOST = 'www.standbygeneratorguide.com';
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
   const hostname = url.hostname.toLowerCase();
 
   // Permanent redirect: Pages default domain -> production apex (preserve path + query).
-  if (hostname === PAGES_DEFAULT_HOST) {
+  if (hostname === PAGES_DEFAULT_HOST || hostname === WWW_HOST) {
     url.protocol = 'https:';
     url.hostname = PRODUCTION_HOST;
+    url.port = '';
     return Response.redirect(url.toString(), 301);
   }
 

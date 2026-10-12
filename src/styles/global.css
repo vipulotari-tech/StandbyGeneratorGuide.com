@@ -262,14 +262,15 @@ header :focus-visible {
 
 /* Print-friendly worksheets and long-form guides. */
 @media print {
-  header, footer, aside, .ad-unit, nav[aria-label="Previous and next guides"] {
+  body > header, body > footer, aside, .ad-unit, nav[aria-label="Previous and next guides"] {
     display: none !important;
   }
   html { scroll-behavior: auto; }
   body { background: #fff !important; color: #000 !important; font-size: 11pt; }
   main, article, .prose-hgg { max-width: none !important; width: 100% !important; }
   a { color: #000 !important; text-decoration: underline !important; }
-  table, figure, blockquote, section { break-inside: avoid; }
+  figure, blockquote, section { break-inside: avoid; }
+  table { break-inside: auto; }
   .prose-hgg h2, .prose-hgg h3 { break-after: avoid; }
   .rounded-xl, .rounded-lg, .rounded-2xl { border-radius: 0 !important; }
   .bg-orange-50\/60, .bg-orange-50\/40, .bg-\[\#edf3fb\], .bg-\[\#f7f9fc\], .bg-surface { background: #fff !important; }
