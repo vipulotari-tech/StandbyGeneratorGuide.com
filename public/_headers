@@ -6,6 +6,21 @@ https://standbygeneratorguide.pages.dev/*
 https://:version.standbygeneratorguide.pages.dev/*
   X-Robots-Tag: noindex, nofollow
 
+# Sitemap and robots delivery for reliable Googlebot fetching.
+# Explicit MIME + edge caching; security headers from /* still merge.
+# Never add X-Robots-Tag noindex here: canonical sitemap must remain crawlable.
+/sitemap-index.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600, must-revalidate
+/sitemap-0.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600, must-revalidate
+/sitemap.xml
+  Cache-Control: public, max-age=3600, must-revalidate
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600, must-revalidate
+
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
