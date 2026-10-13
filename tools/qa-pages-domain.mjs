@@ -11,6 +11,7 @@ const paths = [
   '/cost/standby-generator-cost/',
   '/cost/',
   '/sitemap-index.xml',
+  '/sitemap.xml',
   '/robots.txt',
   '/qa-deliberately-missing-launch-route/',
 ];
@@ -72,8 +73,14 @@ results.push('apex category 200');
 
 const apexRobots = await (await fetchManual(`${APEX_HOST}/robots.txt`)).text();
 assert.match(apexRobots, /Allow: \//, 'apex robots.txt must Allow');
-assert.match(apexRobots, /https:\/\/standbygeneratorguide\.com\/sitemap-index\.xml/, 'apex robots.txt sitemap must be apex');
+assert.match(apexRobots, /https:\/\/standbygeneratorguide\.com\/sitemap\.xml/, 'apex robots.txt direct sitemap must be apex');
 results.push('apex robots.txt Allow + apex sitemap');
+
+const directSitemapRes = await fetchManual(`${APEX_HOST}/sitemap.xml`);
+assert.equal(directSitemapRes.status, 200, 'apex direct sitemap.xml must be 200');
+assert.match(directSitemapRes.headers.get('content-type') ?? '', /application\/xml/);
+assert((await directSitemapRes.text()).includes('<loc>https://standbygeneratorguide.com/</loc>'));
+results.push('apex /sitemap.xml direct 200 XML with canonical URLs');
 
 const apexSitemapRes = await fetchManual(`${APEX_HOST}/sitemap-index.xml`);
 assert.equal(apexSitemapRes.status, 200, 'apex sitemap must be 200');
