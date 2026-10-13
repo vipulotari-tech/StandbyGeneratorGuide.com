@@ -9,12 +9,6 @@ https://:version.standbygeneratorguide.pages.dev/*
 # Sitemap and robots delivery for reliable Googlebot fetching.
 # Explicit MIME + edge caching; security headers from /* still merge.
 # Never add X-Robots-Tag noindex here: canonical sitemap must remain crawlable.
-/sitemap-index.xml
-  Content-Type: application/xml; charset=utf-8
-  Cache-Control: public, max-age=3600, must-revalidate
-/sitemap-0.xml
-  Content-Type: application/xml; charset=utf-8
-  Cache-Control: public, max-age=3600, must-revalidate
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
   Cache-Control: public, max-age=3600

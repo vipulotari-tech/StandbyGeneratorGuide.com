@@ -69,9 +69,8 @@ assert.deepEqual(noindexScopes.sort(), [
   'https://standbygeneratorguide.pages.dev/*',
   'https://:version.standbygeneratorguide.pages.dev/*',
 ].sort(), 'Only production and preview Pages aliases must receive X-Robots-Tag noindex; never the canonical domain');
-assert(sitemapFiles.includes('sitemap.xml'), 'Production must publish direct sitemap.xml');
-assert(sitemapFiles.includes('sitemap-index.xml'), 'Keep legacy sitemap index for existing GSC submissions');
-assert(sitemapFiles.includes('sitemap-0.xml'), 'Keep legacy child sitemap for existing GSC submissions');
+assert.deepEqual(sitemapFiles, ['sitemap.xml'],
+  'Production must publish exactly one flat sitemap.xml, no index or child files');
 const sitemapXml = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
 assert.match(sitemapXml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/,
   'Direct sitemap must be an XML URL set, not an index');
