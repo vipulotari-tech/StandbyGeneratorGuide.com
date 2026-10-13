@@ -10,7 +10,6 @@ const paths = [
   '/',
   '/cost/standby-generator-cost/',
   '/cost/',
-  '/sitemap-index.xml',
   '/sitemap.xml',
   '/robots.txt',
   '/qa-deliberately-missing-launch-route/',
@@ -82,10 +81,10 @@ assert.match(directSitemapRes.headers.get('content-type') ?? '', /application\/x
 assert((await directSitemapRes.text()).includes('<loc>https://standbygeneratorguide.com/</loc>'));
 results.push('apex /sitemap.xml direct 200 XML with canonical URLs');
 
-const apexSitemapRes = await fetchManual(`${APEX_HOST}/sitemap-index.xml`);
-assert.equal(apexSitemapRes.status, 200, 'apex sitemap must be 200');
-assert((await apexSitemapRes.text()).includes('https://standbygeneratorguide.com/sitemap-0.xml'), 'apex sitemap URLs must be apex');
-results.push('apex sitemap-index.xml 200 with apex URLs');
+for (const old of ['/sitemap-index.xml', '/sitemap-0.xml']) {
+  assert.equal((await fetchManual(APEX_HOST + old)).status, 404, old + ' must not be published');
+}
+results.push('no sitemap index or child sitemap served');
 
 const apexMissing = await fetchManual(`${APEX_HOST}/qa-deliberately-missing-launch-route/`);
 assert.equal(apexMissing.status, 404, 'apex missing page must be 404');

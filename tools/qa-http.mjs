@@ -27,14 +27,13 @@ const robots = await request('/robots.txt');
 assert.equal(robots.status, 200);
 const robotsText = await robots.text();
 assert.match(robotsText, environment === 'staging' ? /Disallow: \// : /Allow: \//);
-const sitemap = await request('/sitemap-index.xml');
-assert.equal(sitemap.status, environment === 'staging' ? 404 : 200);
+for (const old of ['/sitemap-index.xml', '/sitemap-0.xml']) {
+  assert.equal((await request(old)).status, 404, old + ' must not be published');
+}
 const directSitemap = await request('/sitemap.xml');
 assert.equal(directSitemap.status, environment === 'staging' ? 404 : 200,
   'CalculatorSt-style sitemap.xml must be a direct 200 response, not a redirect');
 if (environment === 'production') {
-  assert((await sitemap.text()).includes('https://standbygeneratorguide.com/sitemap-0.xml'),
-    'Legacy sitemap index must remain valid');
   assert.match(directSitemap.headers.get('content-type') ?? '', /application\/xml/,
     'Direct sitemap must have XML Content-Type');
   const xml = await directSitemap.text();

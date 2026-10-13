@@ -35,32 +35,20 @@ if "Sitemap: https://standbygeneratorguide.com/sitemap.xml" in robots:
         "https://standbygeneratorguide.pages.dev/*",
         "https://:version.standbygeneratorguide.pages.dev/*",
     ]), "noindex must apply only to Pages aliases, never production or global paths"
-    sitemap_path = DIST / "sitemap-0.xml"
-    index_path = DIST / "sitemap-index.xml"
     direct_path = DIST / "sitemap.xml"
-    assert sitemap_path.is_file() and index_path.is_file() and direct_path.is_file(), "production sitemap missing"
-    sitemap_index = index_path.read_text(encoding="utf-8")
-    index_urls = re.findall(r"<loc>(.*?)</loc>", sitemap_index)
-    assert index_urls and all(
-        urlparse(url).scheme == "https" and urlparse(url).netloc == "standbygeneratorguide.com"
-        for url in index_urls
-    ), "non-production origin leaked into production sitemap index"
-    sitemap = sitemap_path.read_text(encoding="utf-8")
-    urls = re.findall(r"<loc>(.*?)</loc>", sitemap)
-    assert all(urlparse(url).netloc == "standbygeneratorguide.com" for url in urls), (
-        "non-production host leaked into production sitemap"
-    )
+    sitemap_files = sorted(path.name for path in DIST.glob("sitemap*.xml"))
+    assert sitemap_files == ["sitemap.xml"], "production must publish only sitemap.xml"
+    direct_xml = direct_path.read_text(encoding="utf-8")
+    assert "<urlset" in direct_xml and "<sitemapindex" not in direct_xml, "root sitemap must be a flat URL set"
+    assert "<lastmod>" not in direct_xml, "root sitemap must not fabricate last-modified dates"
+    urls = re.findall(r"<loc>(.*?)</loc>", direct_xml)
+    assert len(urls) == len(set(urls)), "duplicate flat sitemap URL"
+    assert all(urlparse(url).scheme == "https" and urlparse(url).netloc == "standbygeneratorguide.com" for url in urls), "non-production origin leaked into sitemap"
     expected = {base_url + path for path in built_paths}
     assert set(urls) == expected, {
         "missing": sorted(expected - set(urls)),
         "extra": sorted(set(urls) - expected),
     }
-    direct_xml = direct_path.read_text(encoding="utf-8")
-    assert "<urlset" in direct_xml and "<sitemapindex" not in direct_xml, "root sitemap must be a flat URL set"
-    assert "<lastmod>" not in direct_xml, "root sitemap must not fabricate last-modified dates"
-    direct_urls = re.findall(r"<loc>(.*?)</loc>", direct_xml)
-    assert len(direct_urls) == len(set(direct_urls)), "duplicate flat sitemap URL"
-    assert set(direct_urls) == expected == set(urls), "flat, legacy and built route sets must match"
     for page in all_html:
         html = page.read_text(encoding="utf-8")
         if page in html_pages:

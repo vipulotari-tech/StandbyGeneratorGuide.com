@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
-import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 const productionUrl = 'https://standbygeneratorguide.com';
@@ -22,11 +21,6 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [
     mdx(),
-    sitemap({
-      // Astro's sitemap integration does not infer page-level noindex state.
-      // Keep error documents out of the production sitemap explicitly.
-      filter: (page) => !page.endsWith('/404/') && !page.endsWith('/404.html'),
-    }),
   ],
   vite: {
     server: {

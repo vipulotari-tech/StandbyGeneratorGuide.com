@@ -6,8 +6,7 @@ import path from 'node:path';
  * CalculatorSt-style, directly fetchable /sitemap.xml: a flat canonical URL
  * set, built from the actual Astro output rather than a hand-maintained list.
  *
- * Retain Astro's existing /sitemap-index.xml and /sitemap-0.xml for previously
- * submitted Search Console sitemaps. The two representations must stay equal.
+ * There is only one sitemap: /sitemap.xml. No index or child sitemap is published.
  */
 export function generateFlatSitemap(directory, origin = 'https://standbygeneratorguide.com') {
   const files = readdirSync(directory, { recursive: true })
@@ -29,16 +28,9 @@ export function generateFlatSitemap(directory, origin = 'https://standbygenerato
   // One flat sitemap is valid only under Google's 50,000 URL / 50 MiB limits.
   assert(urls.size <= 50000, 'Flat sitemap exceeds 50,000 URLs; split sitemaps instead');
 
-  const legacyFiles = readdirSync(directory)
-    .filter((file) => /^sitemap-\d+\.xml$/.test(file));
-  assert.equal(legacyFiles.length, 1,
-    'Expected exactly one existing Astro sitemap child; retain the index if more are generated');
-  const legacyXml = readFileSync(path.join(directory, legacyFiles[0]), 'utf8');
-  assert(legacyXml.includes('<urlset'), 'Legacy Astro sitemap child is not a URL set');
-  const legacyLocs = [...legacyXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) =>
-    match[1].replaceAll('&amp;', '&'));
-  assert.deepEqual(new Set(legacyLocs), urls,
-    'Flat sitemap routes differ from legacy sitemap; investigate before publishing');
+  // Fail the build if any other sitemap is generated.
+  assert.deepEqual(readdirSync(directory).filter((file) => /^sitemap(?:-.*)?\.xml$/i.test(file)), [],
+    'Unexpected sitemap artifact: publish only /sitemap.xml');
 
   const ordered = [...urls].sort((a, b) => a === origin + '/' ? -1 : b === origin + '/' ? 1 : a.localeCompare(b));
   const escapeXml = (value) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -48,5 +40,5 @@ export function generateFlatSitemap(directory, origin = 'https://standbygenerato
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
   assert(Buffer.byteLength(xml, 'utf8') <= 50 * 1024 * 1024, 'Flat sitemap exceeds 50 MiB');
   writeFileSync(path.join(directory, 'sitemap.xml'), xml, 'utf8');
-  return { urls: urls.size, bytes: Buffer.byteLength(xml, 'utf8'), legacy: legacyFiles[0] };
+  return { urls: urls.size, bytes: Buffer.byteLength(xml, 'utf8') };
 }

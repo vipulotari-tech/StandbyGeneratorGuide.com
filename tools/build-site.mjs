@@ -39,8 +39,7 @@ if (result.error) {
 }
 if (result.status !== 0) process.exit(result.status ?? 1);
 
-// Production publishes a direct /sitemap.xml like CalculatorSt.
-// Preserve Astro's index and child files for existing GSC submissions.
+// Production publishes exactly one flat /sitemap.xml; no index or child sitemaps.
 if (environment === 'staging') {
   for (const file of readdirSync(resolve('dist'))) {
     if (/^sitemap(?:-.*)?\.xml$/i.test(file)) rmSync(resolve('dist', file));
