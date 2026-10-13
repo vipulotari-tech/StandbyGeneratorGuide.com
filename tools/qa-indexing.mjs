@@ -49,7 +49,12 @@ if (environment === 'staging') {
 
 assert.match(robots, /Allow:\s*\//i, 'Production robots.txt must allow crawling');
 assert(!/Disallow:\s*\//i.test(robots), 'Production robots.txt must not block the site root');
-assert(robots.includes(`Sitemap: ${productionOrigin}/sitemap-index.xml`), 'Production robots.txt must advertise the canonical sitemap');
+for (const agent of ['Googlebot', 'Googlebot-Image', 'Google-Extended', '*']) {
+  assert(robots.includes(`User-agent: ${agent}\nAllow: /`),
+    `Production robots.txt must permit ${agent} like CalculatorSt`);
+}
+assert(robots.includes(`Sitemap: ${productionOrigin}/sitemap.xml`),
+  'Production robots.txt must advertise the direct /sitemap.xml');
 assert(!robots.includes(stagingOrigin), 'Production robots.txt must not reference staging');
 // Host-scoped Pages noindex rules are required; the canonical host remains indexable.
 const noindexScopes = [];
@@ -64,7 +69,24 @@ assert.deepEqual(noindexScopes.sort(), [
   'https://standbygeneratorguide.pages.dev/*',
   'https://:version.standbygeneratorguide.pages.dev/*',
 ].sort(), 'Only production and preview Pages aliases must receive X-Robots-Tag noindex; never the canonical domain');
-assert(sitemapFiles.length > 0, 'Production must publish sitemap files');
+assert(sitemapFiles.includes('sitemap.xml'), 'Production must publish direct sitemap.xml');
+assert(sitemapFiles.includes('sitemap-index.xml'), 'Keep legacy sitemap index for existing GSC submissions');
+assert(sitemapFiles.includes('sitemap-0.xml'), 'Keep legacy child sitemap for existing GSC submissions');
+const sitemapXml = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
+assert.match(sitemapXml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/,
+  'Direct sitemap must be an XML URL set, not an index');
+assert(!/<(?:lastmod|priority|changefreq)>/.test(sitemapXml),
+  'Do not publish fabricated sitemap dates or obsolete metadata');
+const canonicalLocations = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)]
+  .map((match) => match[1].replaceAll('&amp;', '&'));
+assert.equal(new Set(canonicalLocations).size, canonicalLocations.length,
+  'Direct sitemap contains duplicate locations');
+assert.deepEqual(new Set(canonicalLocations),
+  new Set([...pages.keys()].map((route) => productionOrigin + route)),
+  'Direct sitemap must include exactly all indexable canonical page routes');
+const redirects = fs.readFileSync(path.join(dist, '_redirects'), 'utf8');
+assert(!/^\/sitemap\.xml\s/m.test(redirects),
+  'Direct /sitemap.xml must not be redirected to an index');
 
 // Check every published text file, including error documents and JS bundles.
 for (const entry of fs.readdirSync(dist, { recursive: true, withFileTypes: true })) {
