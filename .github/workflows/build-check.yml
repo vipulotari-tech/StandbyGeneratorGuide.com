@@ -112,8 +112,10 @@ jobs:
         run: |
           test -f dist/robots.txt
           grep -q "Allow: /" dist/robots.txt
-          grep -q "https://standbygeneratorguide.com/sitemap-index.xml" dist/robots.txt
+          grep -q "https://standbygeneratorguide.com/sitemap.xml" dist/robots.txt
+          test -f dist/sitemap.xml
           test -f dist/sitemap-index.xml
+          test -f dist/sitemap-0.xml
           ! grep -R -q "standbygeneratorguide.com/404/" dist/sitemap*.xml
           node tools/qa-indexing.mjs production
 
