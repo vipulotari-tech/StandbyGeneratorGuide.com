@@ -6,8 +6,25 @@ import { IS_INDEXABLE, SITE_URL } from '../config/site';
 // production is crawlable and advertises its own sitemap only.
 export const prerender = true;
 
+// Match CalculatorSt's explicit, permissive production crawler groups.
+// Google-Extended is a content-use control, not an indexing/ranking signal.
+// Staging remains blocked by its own build and headers.
 const robotsText = IS_INDEXABLE
-  ? `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap-index.xml\n`
+  ? `User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: ${SITE_URL}/sitemap.xml
+`
   : 'User-agent: *\nDisallow: /\n';
 
 export const GET: APIRoute = () => new Response(robotsText, {

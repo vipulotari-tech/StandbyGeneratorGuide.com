@@ -17,7 +17,7 @@ built_paths = {
     for page in html_pages
 }
 
-if "Sitemap: https://standbygeneratorguide.com/sitemap-index.xml" in robots:
+if "Sitemap: https://standbygeneratorguide.com/sitemap.xml" in robots:
     base_url = "https://standbygeneratorguide.com"
     assert "Disallow: /" not in robots, "production robots.txt blocks the whole site"
     headers = (DIST / "_headers").read_text(encoding="utf-8")
@@ -37,7 +37,8 @@ if "Sitemap: https://standbygeneratorguide.com/sitemap-index.xml" in robots:
     ]), "noindex must apply only to Pages aliases, never production or global paths"
     sitemap_path = DIST / "sitemap-0.xml"
     index_path = DIST / "sitemap-index.xml"
-    assert sitemap_path.is_file() and index_path.is_file(), "production sitemap missing"
+    direct_path = DIST / "sitemap.xml"
+    assert sitemap_path.is_file() and index_path.is_file() and direct_path.is_file(), "production sitemap missing"
     sitemap_index = index_path.read_text(encoding="utf-8")
     index_urls = re.findall(r"<loc>(.*?)</loc>", sitemap_index)
     assert index_urls and all(
@@ -54,6 +55,12 @@ if "Sitemap: https://standbygeneratorguide.com/sitemap-index.xml" in robots:
         "missing": sorted(expected - set(urls)),
         "extra": sorted(set(urls) - expected),
     }
+    direct_xml = direct_path.read_text(encoding="utf-8")
+    assert "<urlset" in direct_xml and "<sitemapindex" not in direct_xml, "root sitemap must be a flat URL set"
+    assert "<lastmod>" not in direct_xml, "root sitemap must not fabricate last-modified dates"
+    direct_urls = re.findall(r"<loc>(.*?)</loc>", direct_xml)
+    assert len(direct_urls) == len(set(direct_urls)), "duplicate flat sitemap URL"
+    assert set(direct_urls) == expected == set(urls), "flat, legacy and built route sets must match"
     for page in all_html:
         html = page.read_text(encoding="utf-8")
         if page in html_pages:

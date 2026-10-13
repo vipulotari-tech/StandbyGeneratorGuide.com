@@ -9,6 +9,6 @@ for(const [route,{html,ids}] of routes){
  for(const img of html.matchAll(/<img\b[^>]*>/g)){images++;assert(/\balt="[^"]*"/.test(img[0]),'Missing image alt '+route);}
  for(const m of html.matchAll(/<a\b[^>]*href="([^"]+)"/g)){const href=m[1];if(!href.startsWith('/')&&!href.startsWith('#'))continue;links++;const u=new URL(href,'https://standbygeneratorguide.com'+route);let target=routes.get(u.pathname);if(!target){assert(fs.existsSync('dist'+u.pathname),'Broken route '+route+' -> '+href);continue;}if(u.hash){assert(target.ids.has(decodeURIComponent(u.hash.slice(1))),'Broken anchor '+route+' -> '+href);}}
 }
-const robots=fs.readFileSync('dist/robots.txt','utf8');assert(robots.includes('Allow: /')&&robots.includes('https://standbygeneratorguide.com/sitemap-index.xml'));
+const robots=fs.readFileSync('dist/robots.txt','utf8');assert(robots.includes('Allow: /')&&robots.includes('https://standbygeneratorguide.com/sitemap.xml'));
 const sitemap=fs.readdirSync('dist').filter(f=>/^sitemap.*\.xml$/.test(f)).map(f=>fs.readFileSync('dist/'+f,'utf8')).join('');for(const route of routes.keys())assert(sitemap.includes('https://standbygeneratorguide.com'+route+'</loc>'),'Missing sitemap '+route);assert(!sitemap.includes('/404/'));
 fs.mkdirSync('.qa',{recursive:true});const report={pages:routes.size,internalLinksChecked:links,imagesChecked:images,schemaBlocks:schemaCount,canonicalOrigin:'https://standbygeneratorguide.com',result:'PASS'};fs.writeFileSync('.qa/seo.json',JSON.stringify(report,null,2));console.log('Production SEO PASS',report);
