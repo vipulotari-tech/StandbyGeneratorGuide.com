@@ -23,7 +23,7 @@
     "prepare:production": "npm run build:production && npm run qa:seo && npm run qa:security && echo 'Production is Cloudflare Pages (standbygeneratorguide). Use npm run deploy:production or the pages-deploy GitHub workflow; Worker production configs are retired.'",
     "cf-typegen": "wrangler types",
     "test:planning": "node --experimental-strip-types tools/test-planning.mjs",
-    "test:deployment": "node --test tools/test-deployment.mjs tools/test-pages-middleware.mjs",
+    "test:deployment": "node --test tools/test-deployment.mjs tools/test-pages-middleware.mjs tools/test-flat-sitemap.mjs",
     "qa:security": "node tools/qa-security.mjs",
     "qa:http:staging": "node tools/qa-http.mjs staging",
     "qa:http:production": "node tools/qa-http.mjs production",
