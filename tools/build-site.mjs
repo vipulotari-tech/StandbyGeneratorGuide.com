@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { securityPolicy } from './security-policy.mjs';
+import { generateFlatSitemap } from './generate-flat-sitemap.mjs';
 
 const environment = process.argv[2] ?? 'production';
 if (!['production', 'staging'].includes(environment)) {
@@ -38,12 +39,14 @@ if (result.error) {
 }
 if (result.status !== 0) process.exit(result.status ?? 1);
 
-// Staging should not publish a crawlable sitemap; production keeps Astro's
-// generated sitemap index and child files for its indexable robots.txt.
+// Production publishes a direct /sitemap.xml like CalculatorSt.
+// Preserve Astro's index and child files for existing GSC submissions.
 if (environment === 'staging') {
   for (const file of readdirSync(resolve('dist'))) {
     if (/^sitemap(?:-.*)?\.xml$/i.test(file)) rmSync(resolve('dist', file));
   }
+} else {
+  console.log('Flat sitemap:', generateFlatSitemap(resolve('dist')));
 }
 
 // Static host header files are deployment-specific. Add staging's response-
@@ -65,10 +68,6 @@ if (environment === 'staging') {
   outputHeaders = outputHeaders.replace(globalRule, '/*\n  X-Robots-Tag: noindex, nofollow');
 }
 writeFileSync(headersPath, `${outputHeaders.trimEnd()}\n`, 'utf8');
-if (environment === 'production') {
-  const redirectsPath = resolve('dist/_redirects');
-  writeFileSync(redirectsPath, `${readFileSync(redirectsPath, 'utf8').trimEnd()}\n/sitemap.xml /sitemap-index.xml 301\n`);
-}
 const gitCommit = spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' });
 writeFileSync(resolve('dist/deployment.json'), JSON.stringify({
   environment,
