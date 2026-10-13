@@ -29,11 +29,19 @@ const robotsText = await robots.text();
 assert.match(robotsText, environment === 'staging' ? /Disallow: \// : /Allow: \//);
 const sitemap = await request('/sitemap-index.xml');
 assert.equal(sitemap.status, environment === 'staging' ? 404 : 200);
+const directSitemap = await request('/sitemap.xml');
+assert.equal(directSitemap.status, environment === 'staging' ? 404 : 200,
+  'CalculatorSt-style sitemap.xml must be a direct 200 response, not a redirect');
 if (environment === 'production') {
-  assert((await sitemap.text()).includes('https://standbygeneratorguide.com/sitemap-0.xml'));
-  const alias = await request('/sitemap.xml');
-  assert.equal(alias.status, 301);
-  assert.equal(new URL(alias.headers.get('location'), base).pathname, '/sitemap-index.xml');
+  assert((await sitemap.text()).includes('https://standbygeneratorguide.com/sitemap-0.xml'),
+    'Legacy sitemap index must remain valid');
+  assert.match(directSitemap.headers.get('content-type') ?? '', /application\/xml/,
+    'Direct sitemap must have XML Content-Type');
+  const xml = await directSitemap.text();
+  assert(xml.includes('<urlset') && xml.includes('<loc>https://standbygeneratorguide.com/</loc>'),
+    'Direct sitemap must expose indexable apex URLs');
+  assert(robotsText.includes('Sitemap: https://standbygeneratorguide.com/sitemap.xml'),
+    'Robots must advertise direct sitemap');
 }
 const missing = await request('/qa-deliberately-missing-launch-route/');
 assert.equal(missing.status, 404, 'Missing page must not be a soft 404');
