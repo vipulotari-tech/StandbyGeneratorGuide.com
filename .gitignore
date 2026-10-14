@@ -25,3 +25,15 @@ claude-seo/
 
 # Local visual QA artifacts
 .qa/
+
+# Generated Python bytecode and test caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local package-manager diagnostic logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
