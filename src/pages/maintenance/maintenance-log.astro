@@ -29,11 +29,12 @@ const serviceFields = [
       <p class="log-lede">Enter your generator details and completed service records, then print or save your filled log as a PDF. Entries are homeowner-provided, not proof that service was performed.</p>
       <div class="log-actions no-print">
         <button type="button" id="download-log" class="button log-download-button" hidden>Generate PDF <span aria-hidden="true">↓</span></button>
-        <button type="button" id="print-log" class="button log-print-button">Print / Save as PDF <span aria-hidden="true">↗</span></button>
-        <button type="button" id="clear-log" class="log-clear-button">Clear entries</button>
+        <button type="button" id="print-log" class="button log-print-button" disabled>Print / Save as PDF <span aria-hidden="true">↗</span></button>
+        <button type="button" id="clear-log" class="log-clear-button" disabled>Clear entries</button>
         <a href="/maintenance/model-service-schedules/" class="log-secondary-link">See model-specific schedules <span aria-hidden="true">→</span></a>
       </div>
       <p class="log-download-status no-print" id="log-download-status" role="status" aria-live="polite"></p>
+      <p class="log-privacy no-print" id="log-init-status">Editing becomes available when this worksheet loads. If the fields stay unavailable, reload with JavaScript enabled. You can use your browser's Print menu for a blank worksheet.</p>
       <p class="log-privacy no-print" id="log-privacy">Your draft stays in this browser tab session only. Nothing is uploaded to our website. Generate PDF downloads a copy to your device. Save it before closing the tab.</p>
       <p class="log-safety">Follow the exact generator manual. Arrange qualified service for tasks outside the manufacturer's owner instructions.</p>
     </header>
@@ -54,7 +55,7 @@ const serviceFields = [
             <div class="identity-field">
               <dt><label for={id}>{label}</label></dt>
               <dd>
-                <input id={id} class="log-editable" data-record-key={key} type="text" maxlength="200" autocomplete="off" placeholder="Enter details" />
+                <input id={id} class="log-editable" data-record-key={key} type="text" maxlength="200" autocomplete="off" placeholder="Enter details" disabled />
                 <span class="log-print-value" data-print-key={key} aria-hidden="true"></span>
               </dd>
             </div>
@@ -86,9 +87,9 @@ const serviceFields = [
                   return (
                     <td>
                       {col === 2 ? (
-                        <textarea class="log-editable log-work-input" data-record-key={key} aria-label={`Entry ${row + 1}: ${field}`} rows="2" maxlength="1000" placeholder="Enter work / observations"></textarea>
+                        <textarea class="log-editable log-work-input" data-record-key={key} aria-label={`Entry ${row + 1}: ${field}`} rows="2" maxlength="1000" placeholder="Enter work / observations" disabled></textarea>
                       ) : (
-                        <input class="log-editable" data-record-key={key} type="text" aria-label={`Entry ${row + 1}: ${field}`} maxlength="200" autocomplete="off" placeholder="Enter details" />
+                        <input class="log-editable" data-record-key={key} type="text" aria-label={`Entry ${row + 1}: ${field}`} maxlength="200" autocomplete="off" placeholder="Enter details" disabled />
                       )}
                       <span class="log-print-value" data-print-key={key} aria-hidden="true"></span>
                     </td>
@@ -117,9 +118,9 @@ const serviceFields = [
                       <dt><label for={id}>{label}</label></dt>
                       <dd>
                         {col === 2 ? (
-                          <textarea id={id} class="log-editable log-work-input" data-record-key={key} rows="2" maxlength="1000" placeholder="Enter work / observations"></textarea>
+                          <textarea id={id} class="log-editable log-work-input" data-record-key={key} rows="2" maxlength="1000" placeholder="Enter work / observations" disabled></textarea>
                         ) : (
-                          <input id={id} class="log-editable" data-record-key={key} type="text" maxlength="200" autocomplete="off" placeholder="Enter details" />
+                          <input id={id} class="log-editable" data-record-key={key} type="text" maxlength="200" autocomplete="off" placeholder="Enter details" disabled />
                         )}
                       </dd>
                     </div>
@@ -238,6 +239,13 @@ const serviceFields = [
       for (const key of editableGroups.keys()) put(key, '');
       try { sessionStorage.removeItem(storageKey); } catch { /* Nothing is saved remotely. */ }
     });
+    // Enable editing only after mirrored print values and action handlers are
+    // ready. Otherwise a blocked/failed script silently loses typed print data.
+    for (const input of inputs) input.disabled = false;
+    for (const button of root.querySelectorAll<HTMLButtonElement>('#print-log, #clear-log')) {
+      button.disabled = false;
+    }
+    root.querySelector<HTMLElement>('#log-init-status')?.setAttribute('hidden', '');
   }
 </script>
 

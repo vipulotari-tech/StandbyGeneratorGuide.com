@@ -4,17 +4,22 @@ import http from 'node:http';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {chromium} from 'playwright';
+import {browserOptions} from './browser-options.mjs';
 const out=process.env.QA_OUTPUT??'.qa/pdf';fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{let f=path.join('dist',new URL(req.url,'http://localhost').pathname);if(fs.existsSync(f)&&fs.statSync(f).isDirectory())f=path.join(f,'index.html');if(!fs.existsSync(f)){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':'text/html');res.end(fs.readFileSync(f));});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=process.env.BASE_URL??`http://127.0.0.1:${server.address().port}`;
-const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--no-zygote','--single-process','--disable-gpu','--disable-software-rasterizer']}: {})});
+const browser=await chromium.launch(browserOptions);
 const report=[];
 try{
  const page=await browser.newPage();
  for(const width of [390,1440]){
   await page.setViewportSize({width,height:900});await page.goto(base+'/maintenance/maintenance-log/');
   await page.locator('#download-log').waitFor({state:'visible'});
+  assert.equal(await page.locator('[data-record-key]:disabled').count(),0,'Ready worksheet must enable all fields');
+  assert(await page.locator('#print-log').isEnabled(),'Ready print action remains disabled');
+  assert(await page.locator('#clear-log').isEnabled(),'Ready clear action remains disabled');
+  assert(!(await page.locator('#log-init-status').isVisible()),'Ready worksheet still reports unavailable editing');
   await page.locator('.log-card details').evaluateAll(ds=>ds.forEach(d=>d.open=true));
   const expected={};
   for(let n=0;n<7;n++)expected[`detail-${n}`]=`DETAIL${n} model – café Ω`;
@@ -66,5 +71,22 @@ try{
  assert(emptyText.includes('SERVICE ENTRY 12'),'Empty log lost available service records');
  assert(pages.every(p=>/Generator model|SERVICE ENTRY|Run hours|Performed by|Next due|Work, parts/.test(p)),'Header-only PDF page');
  report.push({scenario:'empty',pages:pages.length,noBlankPages:true,serviceEntries:12});
+ const noJs=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:900}});
+ const fallback=await noJs.newPage();
+ await fallback.goto(base+'/maintenance/maintenance-log/');
+ assert(await fallback.locator('#print-log').isDisabled(),'No-script print action must not pretend to work');
+ assert(await fallback.locator('#clear-log').isDisabled(),'No-script clear action must not pretend to work');
+ assert(!(await fallback.locator('#download-log').isVisible()),'No-script download must remain unavailable');
+ assert(await fallback.locator('#log-init-status').isVisible(),'No-script blank worksheet instructions missing');
+ assert.equal(await fallback.locator('[data-record-key]:enabled').count(),0,'No-script editing would lose printed data');
+ await fallback.screenshot({path:`${out}/no-script.png`,fullPage:true});
+ await fallback.emulateMedia({media:'print'});
+ await fallback.pdf({path:`${out}/no-script-blank.pdf`,format:'Letter',printBackground:true});
+ const blankText=execFileSync('pdftotext',['-raw',`${out}/no-script-blank.pdf`,'-'],{encoding:'utf8'});
+ assert(blankText.replace(/\s/g,'').includes('Generatormaintenancelog'),'Blank no-script worksheet missing heading');
+ assert(await fallback.locator('.log-table tbody tr').count()===12,'Blank no-script worksheet missing service rows');
+ report.push({scenario:'no-script',editingDisabled:true,actionsDisabled:true,blankWorksheet:true});
+ await noJs.close();
+
 }finally{fs.writeFileSync(`${out}/results.json`,JSON.stringify(report,null,2));await browser.close();server.close();}
 console.log('PDF data and paper assertions PASS',JSON.stringify(report));
