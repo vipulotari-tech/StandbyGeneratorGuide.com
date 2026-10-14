@@ -25,11 +25,13 @@ def get(url):
   with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'StandbyGeneratorGuide authorized QA'}),timeout=35)as r:return r.status,r.url,dict(r.headers),r.read().decode('utf8')
  except Exception as e:return None,url,{},str(e)
 status,url,headers,robots=get(BASE+'/robots.txt');(OUT/'robots.txt').write_text(robots)
-status,url,headers,index=get(BASE+'/sitemap-index.xml');(OUT/'sitemap-index.xml').write_text(index)
-urls=set();ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
-for child in ET.fromstring(index).findall('.//s:loc',ns):
- _,_,_,text=get(child.text)
- urls.update(n.text for n in ET.fromstring(text).findall('.//s:loc',ns))
+status,url,headers,sitemap=get(BASE+'/sitemap.xml');(OUT/'sitemap.xml').write_text(sitemap)
+assert status == 200, f'Sitemap fetch failed: {status}: {sitemap[:200]}'
+ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+root=ET.fromstring(sitemap)
+assert root.tag == '{'+ns['s']+'}urlset', 'Expected one flat sitemap, not an index'
+urls={n.text for n in root.findall('s:url/s:loc',ns)}
+assert urls, 'Sitemap has no URLs'
 rows=[];pending=set(urls);seen=set();rounds=0
 while pending:
  batch=sorted(pending-seen);pending=set();seen.update(batch)

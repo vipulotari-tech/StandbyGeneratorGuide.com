@@ -31,6 +31,7 @@
     "validate:evidence": "node tools/validate-evidence.mjs",
     "qa:planners": "node tools/qa-planners.mjs",
     "qa:seo": "node tools/qa-seo.mjs",
+    "qa:sitemap:live": "python tools/qa-sitemap-live.py",
     "qa:keywords": "node tools/qa-keyword-clusters.mjs",
     "qa:buyer-journey": "node tools/qa-buyer-journey.mjs",
     "qa:assets": "node tools/qa-assets.mjs",

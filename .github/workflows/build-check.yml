@@ -132,7 +132,7 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:8322
           EXPECTED_COMMIT: ${{ github.sha }}
-        run: npm run qa:http:production && npm run qa:browser
+        run: npm run qa:http:production && npm run qa:sitemap:live && npm run qa:browser
       - name: Validate staging, production and www deployment configuration
         run: |
           npx wrangler deploy --config wrangler.jsonc --dry-run
