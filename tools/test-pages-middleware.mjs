@@ -18,6 +18,35 @@ test('preview retains status/body and explicitly prevents indexing',async()=>{
  assert.equal(response.status,404);assert.equal(response.headers.get('x-robots-tag'),'noindex, nofollow');assert.equal(await response.text(),'not found');
 });
 
+test('retired sitemaps never reach stale asset storage, including query and HEAD variants', async () => {
+ for (const host of ['standbygeneratorguide.com', 'preview.standbygeneratorguide.pages.dev']) {
+  for (const path of ['/sitemap-index.xml', '/sitemap-0.xml', '/sitemap-1.xml?old=1', '/sitemap-0.xml/']) {
+   for (const method of ['GET', 'HEAD']) {
+    let called = false;
+    const response = await onRequest({
+     request: new Request(`https://${host}${path}`, {method}),
+     next: () => { called = true; return new Response('<urlset>stale</urlset>'); },
+    });
+    assert.equal(called, false, `${method} ${host}${path}`);
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('x-robots-tag'), 'noindex');
+    assert.equal(await response.text(), method === 'HEAD' ? '' : 'Not found. Use /sitemap.xml.\n');
+   }
+  }
+ }
+});
+
+test('canonical sitemap passes through unchanged without noindex', async () => {
+ const original = new Response('<urlset/>', {headers: {'Content-Type': 'application/xml'}});
+ const response = await onRequest({
+  request: new Request('https://standbygeneratorguide.com/sitemap.xml?check=1'),
+  next: () => original,
+ });
+ assert.equal(response, original);
+ assert.equal(response.headers.get('x-robots-tag'), null);
+});
+
 test('retired sitemap paths cannot serve stale cached XML for GET or HEAD',async()=>{
  for(const pathname of ['/sitemap-index.xml','/sitemap-0.xml','/sitemap-1.xml']){
   for(const method of ['GET','HEAD']){
@@ -25,12 +54,12 @@ test('retired sitemap paths cannot serve stale cached XML for GET or HEAD',async
    const response=await onRequest({request:new Request(`https://standbygeneratorguide.com${pathname}?cache=old`,{method}),next:()=>{called=true;return new Response('<sitemapindex/>',{status:200});}});
    assert.equal(response.status,404);assert.equal(called,false);
    assert.equal(response.headers.get('cache-control'),'no-store');
-   assert.equal(await response.text(),method==='HEAD'?'':'Not found\n');
+   assert.equal(await response.text(),method==='HEAD'?'':'Not found. Use /sitemap.xml.\n');
   }
  }
 });
 
-test('canonical sitemap passes through unchanged without noindex',async()=>{
+test('canonical sitemap without query passes through unchanged without noindex',async()=>{
  const original=new Response('<urlset/>',{headers:{'Content-Type':'application/xml'}});
  const response=await onRequest({request:new Request('https://standbygeneratorguide.com/sitemap.xml'),next:()=>original});
  assert.equal(response,original);assert.equal(response.headers.get('x-robots-tag'),null);

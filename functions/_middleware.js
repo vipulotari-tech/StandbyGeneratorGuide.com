@@ -26,11 +26,11 @@ export async function onRequest(context) {
     return Response.redirect(url.toString(), 301);
   }
 
-  // Deleted assets can remain in the custom-domain asset cache after a deploy.
-  // Retire the former index and numbered children before consulting that cache.
-  // Keep /sitemap.xml as the only sitemap, including for HEAD/query requests.
-  if (/^\/sitemap-(?:index|\d+)\.xml$/.test(url.pathname)) {
-    return new Response(context.request.method === 'HEAD' ? null : 'Not found\n', {
+  // Retired sitemap assets can survive in the Pages asset cache after removal
+  // from dist. Resolve these paths before context.next(), including query variants.
+  // Keep /sitemap.xml as the only published sitemap; never redirect it here.
+  if (/^\/sitemap-(?:index|\d+)\.xml\/?$/.test(url.pathname)) {
+    return new Response(context.request.method === 'HEAD' ? null : 'Not found. Use /sitemap.xml.\n', {
       status: 404,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',

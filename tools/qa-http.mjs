@@ -34,6 +34,8 @@ const directSitemap = await request('/sitemap.xml');
 assert.equal(directSitemap.status, environment === 'staging' ? 404 : 200,
   'CalculatorSt-style sitemap.xml must be a direct 200 response, not a redirect');
 if (environment === 'production') {
+  assert(!/noindex|none/i.test(directSitemap.headers.get('x-robots-tag') ?? ''),
+    'Canonical sitemap must not carry a noindex response header');
   assert.match(directSitemap.headers.get('content-type') ?? '', /application\/xml/,
     'Direct sitemap must have XML Content-Type');
   const xml = await directSitemap.text();
