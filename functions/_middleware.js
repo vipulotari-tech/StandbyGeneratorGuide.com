@@ -26,6 +26,20 @@ export async function onRequest(context) {
     return Response.redirect(url.toString(), 301);
   }
 
+  // Deleted assets can remain in the custom-domain asset cache after a deploy.
+  // Retire the former index and numbered children before consulting that cache.
+  // Keep /sitemap.xml as the only sitemap, including for HEAD/query requests.
+  if (/^\/sitemap-(?:index|\d+)\.xml$/.test(url.pathname)) {
+    return new Response(context.request.method === 'HEAD' ? null : 'Not found\n', {
+      status: 404,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Robots-Tag': 'noindex',
+      },
+    });
+  }
+
   // Preview deployments: never index, never redirect (keeps hash-URL QA usable).
   // Cloudflare already adds noindex to preview URLs; set it explicitly as well.
   if (hostname.endsWith('.pages.dev')) {
