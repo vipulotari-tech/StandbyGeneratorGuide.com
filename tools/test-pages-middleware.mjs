@@ -17,3 +17,32 @@ test('preview retains status/body and explicitly prevents indexing',async()=>{
  const response=await onRequest({request:new Request('https://qa-full-production.standbygeneratorguide.pages.dev/missing/'),next:()=>new Response('not found',{status:404,headers:{'Content-Type':'text/html'}})});
  assert.equal(response.status,404);assert.equal(response.headers.get('x-robots-tag'),'noindex, nofollow');assert.equal(await response.text(),'not found');
 });
+
+test('retired sitemaps never reach stale asset storage, including query and HEAD variants', async () => {
+ for (const host of ['standbygeneratorguide.com', 'preview.standbygeneratorguide.pages.dev']) {
+  for (const path of ['/sitemap-index.xml', '/sitemap-0.xml', '/sitemap-1.xml?old=1', '/sitemap-0.xml/']) {
+   for (const method of ['GET', 'HEAD']) {
+    let called = false;
+    const response = await onRequest({
+     request: new Request(`https://${host}${path}`, {method}),
+     next: () => { called = true; return new Response('<urlset>stale</urlset>'); },
+    });
+    assert.equal(called, false, `${method} ${host}${path}`);
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('x-robots-tag'), 'noindex');
+    assert.equal(await response.text(), method === 'HEAD' ? '' : 'Not found. Use /sitemap.xml.\n');
+   }
+  }
+ }
+});
+
+test('canonical sitemap passes through unchanged without noindex', async () => {
+ const original = new Response('<urlset/>', {headers: {'Content-Type': 'application/xml'}});
+ const response = await onRequest({
+  request: new Request('https://standbygeneratorguide.com/sitemap.xml?check=1'),
+  next: () => original,
+ });
+ assert.equal(response, original);
+ assert.equal(response.headers.get('x-robots-tag'), null);
+});
