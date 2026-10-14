@@ -3,6 +3,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+import {browserOptions} from './browser-options.mjs';
 const widths = [320,360,375,390,414,430,768,820,1024,1280,1440,1920];
 const routes = fs.readdirSync('dist',{recursive:true}).filter(f=>f.endsWith('.html')).map(f=>'/'+f.replaceAll('\\','/').replace(/index\.html$/,'')).sort();
 const out=process.env.QA_OUTPUT??'.qa/matrix'; fs.mkdirSync(out,{recursive:true});
@@ -15,8 +16,7 @@ const server=http.createServer((req,res)=>{
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const base=process.env.BASE_URL??`http://127.0.0.1:${server.address().port}`;
-const options={headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:JSON.parse(process.env.PLAYWRIGHT_CHROMIUM_ARGS??'["--no-sandbox","--no-zygote","--single-process","--disable-gpu","--disable-software-rasterizer"]')}: {})};
-const browser=await chromium.launch(options);const context=await browser.newContext();const page=await context.newPage();const results=[];let current;
+const browser=await chromium.launch(browserOptions);const context=await browser.newContext();const page=await context.newPage();const results=[];let current;
 page.on('pageerror',error=>current?.errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')current?.errors.push(message.text());});
 try{
