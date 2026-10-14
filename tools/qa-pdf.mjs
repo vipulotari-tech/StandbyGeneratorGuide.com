@@ -56,6 +56,24 @@ try{
   assert(positions.length>=67,'Missing positioned record text');
   assert(positions.every(m=>Number(m[1])>=42&&Number(m[1])<570&&Number(m[2])>=22&&Number(m[2])<=760),'PDF text outside Letter margins');
   result.textWithinPage=true;
+  // A cleared browser draft must not leak previous service/serial values into
+  // the exported PDF, printed mirror fields, or a subsequent reload.
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#clear-log').click();
+  assert.equal(await page.locator('[data-record-key="detail-0"]').first().inputValue(), '', 'Clear failed to empty generator detail');
+  assert.equal(await page.locator('[data-print-key="detail-0"]').first().textContent(), '', 'Clear left stale printable value');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('sgg-generator-maintenance-log-session-v1')), null, 'Clear left saved draft');
+  const clearedPromise=page.waitForEvent('download');
+  await page.locator('#download-log').click();
+  const cleared=await clearedPromise;
+  const clearedFile=`${out}/cleared-${width}.pdf`;
+  await cleared.saveAs(clearedFile);
+  const clearedText=execFileSync('pdftotext',['-raw',clearedFile,'-'],{encoding:'utf8'});
+  assert(!clearedText.includes('DETAIL0')&&!clearedText.includes('ROW0COL0'),'Cleared PDF leaked old worksheet data');
+  assert(clearedText.includes('SERVICE ENTRY 12'),'Cleared PDF lost blank service rows');
+  await page.reload();
+  assert.equal(await page.locator('[data-record-key="detail-0"]').first().inputValue(), '', 'Cleared entries returned after reload');
+  result.clearResetVerified=true;
  }
  const emptyPage=await browser.newPage({viewport:{width:390,height:900}});
  await emptyPage.goto(base+'/maintenance/maintenance-log/');
