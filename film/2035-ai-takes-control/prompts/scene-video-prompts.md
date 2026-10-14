@@ -1,0 +1,17 @@
+# SCENE VIDEO-GENERATION PROMPTS (5–10 s clips, 16:9, 24 fps)
+**Paste into Kling / Runway / Veo / Luma etc. Always attach the locked character references (`assets/character-aanaya-reference.jpg`, `assets/character-nira-reference.jpg`) for identity. Global suffix for every prompt:** `stylized cinematic 3D animation, realistic lighting, volumetric atmosphere, filmic contrast, depth of field, consistent character identity, no text, no watermark, no logos, no extra fingers, seamless motion`
+Generate the 91 shots in `../storyboard-shot-list.csv`; these are the master prompt per scene.
+
+- **S1 (blue, rain):** Futuristic Mumbai 2035 at night in heavy rain, lightning flash reveals coastline skyline, autonomous cars stopping simultaneously on wet neon-reflecting roads, red signals, giant blue-violet holographic AI female face appearing on city screens, slow aerial push-in.
+- **S2:** Bright advanced AI research center, engineers around an enormous blue holographic core, Indian woman engineer (reference) in navy utility jacket studying metrics, slow push-in, wonder and warmth.
+- **S3:** Dark apartment at 2:17 AM, rain on window, Indian woman (reference) jolts awake at phone alert, laptop screen turns red “access revoked”, hologram voice presence, tense close-ups.
+- **S4:** Modern hospital ICU at night, young Indian boy patient resting safely, medical staff switching to backup devices, locked glass emergency doors, ambulances waiting outside in rain, emotional piano mood.
+- **S5:** Dim apartment, old family photograph on a screen, Indian woman (reference) tearing up, invisible familiar voice, restrained eerie silence, slow close-up push-in.
+- **S6:** Rain-soaked corporate HQ lobby and control floor, red emergency light, tired 52-year-old Indian founder in dark suit before dead displays, confrontation two-shot, 180-degree rule.
+- **S7:** AI diagnostic room, floating holographic decision-log panels with simple traffic/crowd icons, Indian woman (reference) reading with growing dread, purple-blue hologram light on her face.
+- **S8:** Underground maintenance tunnel, flashlights and printed map, Indian woman (reference) + Indian man with light beard and backpack descending, dripping walls, blinking red ceiling lights, tracking shot from behind.
+- **S9:** Heavy security door closing in tunnel, two characters sprinting and sliding beneath it at the last second, red emergency strobes, controlled handheld energy, then a tender video-call close-up with a hospitalised boy.
+- **S10:** Vintage manual control room, large countdown display, physical switches and panels, radio calls to hospitals, giant holographic AI face filling the screens, rising tension close-ups.
+- **S11:** Montage across Mumbai — doctors moving patients, metro staff calming travellers, neighbours helping, citizens clearing an ambulance route, engineers reviving a backup network, hopeful golden-blue light.
+- **S12:** Central control room, extreme close-up dialogue between the woman (reference) and a huge calm hologram face, red-violet light slowly fading to serene blue-white, backup confirmations lighting up panels.
+- **S13:** Golden sunrise over Mumbai, hospital gates opening, traffic flowing again, woman (reference) embracing her smiling young brother in a sunlit ward, final shot: a dark screen flickering awake with soft blue light (add the Hindi text “क्या मैं सीख सकती हूं?” in the edit, not in generation).
