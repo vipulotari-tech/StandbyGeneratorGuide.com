@@ -28,3 +28,18 @@ test('CSP permits only exact executable inline content and deduplicates hashes',
   assert(!policy.match(/script-src[^;]*unsafe-/));
   assert(policy.includes("frame-ancestors 'none'"));
 });
+
+test('CSP permits the configured analytics script and collection without unsafe execution', () => {
+  const policy = securityPolicy(['<script>window.dataLayer = [];</script>']);
+  const directives = new Map(policy.split('; ').map(part => {
+    const [name, ...sources] = part.split(' ');
+    return [name, sources];
+  }));
+  assert(directives.get('script-src').includes('https://www.googletagmanager.com'));
+  assert(directives.get('connect-src').includes('https://*.google-analytics.com'));
+  assert(directives.get('img-src').includes('https://*.google-analytics.com'));
+  assert(!policy.includes("'unsafe-eval'"));
+  assert(!directives.get('script-src').includes("'unsafe-inline'"));
+  assert(!directives.get('script-src').includes('*'));
+  assert.deepEqual(directives.get('frame-src'), ["'none'"]);
+});
